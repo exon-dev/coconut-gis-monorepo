@@ -4,6 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use App\Models\Barangay;
+
 return new class extends Migration {
     /**
      * Run the migrations.
@@ -17,6 +19,9 @@ return new class extends Migration {
             $table->date('birthdate');
             $table->string('subsidy');
             $table->string('phone');
+            $table
+                ->foreignIdFor(Barangay::class, 'barangay_id')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -4,6 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use App\Models\User;
+
 return new class extends Migration {
     /**
      * Run the migrations.
@@ -12,12 +14,9 @@ return new class extends Migration {
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id('admin_id');
-            $table->varchar('name');
-            $table->varchar('role');
-            $table
-                ->foreignId('user_id')
-                ->constrained('users')
-                ->onDelete('cascade');
+            $table->string('name');
+            $table->string('role');
+            $table->foreignIdFor(User::class, 'user_id')->onDelete('cascade');
             $table->timestamps();
         });
     }

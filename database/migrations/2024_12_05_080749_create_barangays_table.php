@@ -4,6 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use App\Models\Farmer;
+use App\Models\Land;
+
 return new class extends Migration {
     /**
      * Run the migrations.
@@ -15,13 +18,9 @@ return new class extends Migration {
             $table->string('barangay_name');
             $table->string('barangay_captain');
             $table->string('barangay_contact');
+            $table->foreignIdFor(Land::class, 'land_id')->onDelete('cascade');
             $table
-                ->foreignId('land_id')
-                ->constrained('lands')
-                ->onDelete('cascade');
-            $table
-                ->foreignId('farmer_id')
-                ->constrained('farmers')
+                ->foreignIdFor(Farmer::class, 'farmer_id')
                 ->onDelete('cascade');
             $table->timestamps();
         });

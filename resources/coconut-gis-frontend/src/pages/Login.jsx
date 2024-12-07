@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
 import { FaLeaf, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import build from "../utils/dev";
+
+import { toast, Toaster } from "sonner";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -8,23 +12,40 @@ const Login = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         // Handle login logic here
-        console.log({ email, password, rememberMe });
+        try {
+            const response = await fetch(build("auth/login"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            }).then((res) => res.json());
+
+            console.log(response);
+        } catch (err) {
+            toast.error("Invalid email or password");
+            throw new Error(err);
+        }
     };
 
     return (
         <div className="">
+            <Toaster richColors position="top-center" />
             <div style={styles.page}>
                 <Container>
                     <Row className="justify-content-center">
-                        <Col md={6}>
+                        <Col md={4}>
                             <div style={styles.card}>
-                                <div style={styles.logo}>
+                                <Link to="/" style={styles.logo}>
                                     <FaLeaf style={styles.logoIcon} />
                                     <h2 style={styles.title}>CocoFarm</h2>
-                                </div>
+                                </Link>
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group controlId="formBasicEmail">
                                         <Form.Label style={styles.label}>
@@ -137,6 +158,8 @@ const styles = {
         alignItems: "center",
         justifyContent: "center",
         marginBottom: "1.5rem",
+        textDecoration: "none",
+        cursor: "pointer",
     },
     logoIcon: {
         fontSize: "2.5rem",
@@ -168,6 +191,7 @@ const styles = {
         fontSize: "1rem",
         color: "#2c3e50",
         marginTop: "1rem",
+        marginBottom: "1rem",
     },
     button: {
         width: "100%",
