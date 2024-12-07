@@ -1,7 +1,10 @@
 import React from "react";
+import { useAdminStore } from "../../store/admin";
 
 const Dashboard = () => {
-    return <div>Dashboard</div>;
+    const admin = useAdminStore((state) => state.admin);
+
+    return <div>{admin?.name}</div>;
 };
 
 export default Dashboard;

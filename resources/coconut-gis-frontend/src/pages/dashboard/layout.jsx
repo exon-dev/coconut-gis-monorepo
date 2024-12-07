@@ -11,12 +11,36 @@ import {
     FaCalendarAlt,
     FaUserCircle,
 } from "react-icons/fa";
-import { useAdminStore, useSetAdmin } from "../../store/admin";
+import { useSetAdmin } from "../../store/admin";
+import { toast, Toaster } from "sonner";
+import build from "../../utils/dev";
 
 const RootLayout = () => {
     useSetAdmin();
-    const admin = useAdminStore((state) => state.admin);
     const location = useLocation();
+
+    const handleLogout = async () => {
+        try {
+            const response = await fetch(build("auth/logout"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+            if (!response.ok) {
+                toast.error("An error occurred. Please try again.");
+                return;
+            }
+            localStorage.removeItem("admin");
+            localStorage.removeItem("token");
+            window.location.href = "/";
+            toast.success("You have been logged out.", { duration: 5000 });
+        } catch (err) {
+            toast.error("An error occurred. Please try again.");
+            return new Error(err);
+        }
+    };
 
     const navItems = [
         { path: "/dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
@@ -44,6 +68,7 @@ const RootLayout = () => {
 
     return (
         <div>
+            <Toaster richColors position="top-center" />
             <Navbar
                 bg="light"
                 expand="lg"
@@ -103,8 +128,13 @@ const RootLayout = () => {
                                     Settings
                                 </NavDropdown.Item>
                                 <NavDropdown.Divider />
-                                <NavDropdown.Item as={Link} to="/logout">
-                                    Logout
+                                <NavDropdown.Item>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="btn btn-primary"
+                                    >
+                                        Logout
+                                    </button>
                                 </NavDropdown.Item>
                             </NavDropdown>
                         </Nav>
