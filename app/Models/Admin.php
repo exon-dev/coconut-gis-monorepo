@@ -11,11 +11,10 @@ use App\Models\Barangay;
 
 class Admin extends Model
 {
-    use HasFactory;
-    use HasApiTokens;
+    use HasFactory, HasApiTokens;
 
     protected $primaryKey = 'admin_id';
-    protected $guarded = [];
+    protected $fillable = ['name', 'role', 'user_id'];
 
     public function user()
     {

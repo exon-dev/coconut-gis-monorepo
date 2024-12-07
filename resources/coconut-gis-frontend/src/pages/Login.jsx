@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
-import { FaLeaf, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+    FaLeaf,
+    FaEnvelope,
+    FaLock,
+    FaEye,
+    FaEyeSlash,
+    FaSpinner,
+} from "react-icons/fa";
 import build from "../utils/dev";
+import { motion } from "framer-motion";
 
 import { toast, Toaster } from "sonner";
 
@@ -11,10 +19,12 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         // Handle login logic here
+        setLoading(true);
         try {
             const response = await fetch(build("auth/login"), {
                 method: "POST",
@@ -27,12 +37,37 @@ const Login = () => {
                 }),
             }).then((res) => res.json());
 
-            console.log(response);
+            if (rememberMe) {
+                localStorage.setItem("email", email);
+                localStorage.setItem("password", password);
+            }
+
+            if (response.message === "Unauthorized") {
+                toast.error("Invalid email or password");
+                return;
+            }
+
+            localStorage.setItem("token", response.accessToken);
+            localStorage.setItem("admin", JSON.stringify(response.admin));
+
+            window.location.href = "/dashboard/map";
         } catch (err) {
             toast.error("Invalid email or password");
             throw new Error(err);
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const email = localStorage.getItem("email");
+        const password = localStorage.getItem("password");
+
+        if (email && password) {
+            setEmail(email);
+            setPassword(password);
+        }
+    }, []);
 
     return (
         <div className="">
@@ -62,6 +97,7 @@ const Login = () => {
                                                 onChange={(e) =>
                                                     setEmail(e.target.value)
                                                 }
+                                                required
                                                 style={styles.input}
                                             />
                                         </InputGroup>
@@ -81,6 +117,7 @@ const Login = () => {
                                                         ? "text"
                                                         : "password"
                                                 }
+                                                required
                                                 placeholder="Password"
                                                 value={password}
                                                 onChange={(e) =>
@@ -122,8 +159,22 @@ const Login = () => {
                                         variant="success"
                                         type="submit"
                                         style={styles.button}
+                                        disabled={loading}
                                     >
-                                        Login
+                                        {loading ? (
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{
+                                                    repeat: Infinity,
+                                                    duration: 1,
+                                                    ease: "linear",
+                                                }}
+                                            >
+                                                <FaSpinner />
+                                            </motion.div>
+                                        ) : (
+                                            "Log in"
+                                        )}
                                     </Button>
                                 </Form>
                             </div>

@@ -60,8 +60,8 @@ const Home = () => {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1, delay: 0.5 }}
                         >
-                            Web-based GIS Mapping System of Agusan Del Sur for
-                            Coconut Farms
+                            Web-based GIS Mapping and Information System of
+                            Agusan Del Sur for Coconut Farms
                         </motion.p>
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -263,6 +263,7 @@ const styles = {
     page: {
         width: "100%",
         backgroundColor: "#f8f9fa",
+        overflowX: "hidden",
     },
     navbar: {
         padding: "0 2rem",
