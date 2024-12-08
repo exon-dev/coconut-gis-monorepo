@@ -18,10 +18,9 @@ return new class extends Migration {
             $table->string('barangay_name');
             $table->string('barangay_captain');
             $table->string('barangay_contact');
-            $table->foreignIdFor(Land::class, 'land_id')->onDelete('cascade');
-            $table
-                ->foreignIdFor(Farmer::class, 'farmer_id')
-                ->onDelete('cascade');
+            $table->float('x_coordinate');
+            $table->float('y_coordinate');
+            $table->text('coordinate_points');
             $table->timestamps();
         });
     }

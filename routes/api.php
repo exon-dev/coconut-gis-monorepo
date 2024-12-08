@@ -2,9 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Api\AuthController;
-
+use App\Http\Controllers\Api\BarangayController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,6 +23,12 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware(
+        'auth:sanctum'
+    );
+});
+
+Route::group(['prefix' => 'barangay'], function () {
+    Route::get('/all', [BarangayController::class, 'index'])->middleware(
         'auth:sanctum'
     );
 });

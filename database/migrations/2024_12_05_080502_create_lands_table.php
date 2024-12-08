@@ -15,9 +15,8 @@ return new class extends Migration {
     {
         Schema::create('lands', function (Blueprint $table) {
             $table->id('land_id');
-            $table->float('total_hectare');
-            $table->float('total_square_meter');
-            $table->string('land_location');
+            $table->boolean('is_affected');
+            $table->text('land_location');
             $table
                 ->foreignIdFor(Farmer::class, 'farmer_id')
                 ->onDelete('cascade');

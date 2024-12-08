@@ -15,10 +15,8 @@ return new class extends Migration {
         Schema::create('farmers', function (Blueprint $table) {
             $table->id('farmer_id');
             $table->string('name');
-            $table->string('address', 500);
-            $table->date('birthdate');
-            $table->string('subsidy');
-            $table->string('phone');
+            $table->string('gender');
+            $table->integer('number_of_coconut_trees');
             $table
                 ->foreignIdFor(Barangay::class, 'barangay_id')
                 ->onDelete('cascade');
