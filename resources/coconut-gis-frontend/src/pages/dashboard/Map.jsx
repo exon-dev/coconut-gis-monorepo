@@ -55,7 +55,7 @@ const MapComponent = () => {
     );
 
     const mapboxAccessToken =
-        "pk.eyJ1Ijoia2FydXJvb29vIiwiYSI6ImNtMnN4cDNoMzAyaXUydm9wdzZ1N3Q4NWoifQ.Oz35yPC6kh4Rpd_eCIGaNQ"; // Replace with your Mapbox access token
+        "pk.eyJ1Ijoia2FydXJvb29vIiwiYSI6ImNtMnN4cDNoMzAyaXUydm9wdzZ1N3Q4NWoifQ.Oz35yPC6kh4Rpd_eCIGaNQ";
     const mapboxTile = useMemo(
         () =>
             new TileLayer({
@@ -225,15 +225,23 @@ const MapComponent = () => {
     return (
         <div
             id="map"
-            style={{ height: "100vh", width: "100vw", position: "relative" }}
+            style={{
+                height: "100vh",
+                width: "100vw",
+                position: "relative",
+                margin: 0,
+                padding: 0,
+            }}
             ref={mapTargetElement}
         >
             <Toaster position="top-center" richColors />
             <div
-                className="controls position-absolute top-0 start-0 mt-3 ms-3 bg-white p-3 shadow"
+                className="controls position-absolute top-0 start-0 mt-4 ms-2 bg-white p-3 shadow"
                 style={{
                     width: isConfigMinimized ? "auto" : "300px",
                     zIndex: 1000,
+                    maxHeight: "90vh",
+                    overflowY: "auto",
                 }}
             >
                 <div className="mb-2 d-flex gap-4 justify-content-between align-items-center">
@@ -327,23 +335,29 @@ const MapComponent = () => {
                                     </label>
                                     <div className="d-flex gap-2">
                                         <button
-                                            onClick={() =>
+                                            onClick={() => {
+                                                toast.success(
+                                                    "Unaffected Plot Active. Please plot now!"
+                                                );
                                                 addInteraction(
                                                     "rgba(0, 255, 0, 0.5)",
                                                     setUnaffectedPlots
-                                                )
-                                            }
+                                                );
+                                            }}
                                             className="btn btn-success"
                                         >
                                             Unaffected
                                         </button>
                                         <button
-                                            onClick={() =>
+                                            onClick={() => {
+                                                toast.error(
+                                                    "Affected Plot Active. Please plot now!"
+                                                );
                                                 addInteraction(
                                                     "rgba(255, 0, 0, 0.5)",
                                                     setAffectedPlots
-                                                )
-                                            }
+                                                );
+                                            }}
                                             className="btn btn-danger"
                                         >
                                             Affected
@@ -363,17 +377,7 @@ const MapComponent = () => {
                                         >
                                             Reset All Plots
                                         </button>
-                                        <button
-                                            onClick={() => {
-                                                setAffectedPlots([]);
-                                                setUnaffectedPlots([]);
-
-                                                toast.success(
-                                                    "All plots reset"
-                                                );
-                                            }}
-                                            className="btn btn-warning"
-                                        >
+                                        <button className="btn btn-warning">
                                             Save
                                         </button>
                                     </div>

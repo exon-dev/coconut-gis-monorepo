@@ -141,7 +141,7 @@ const RootLayout = () => {
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
-            <Container style={{ marginTop: "5rem" }}>
+            <Container style={{ marginTop: "3rem", marginLeft: "-10px" }}>
                 <Outlet />
             </Container>
         </div>
