@@ -11,12 +11,16 @@ import {
     FaCalendarAlt,
     FaUserCircle,
 } from "react-icons/fa";
-import { useSetAdmin } from "../../store/admin";
+import { useAdminStore, useSetAdmin } from "../../store/admin";
+import { useBarangays } from "../../store/barangays";
 import { toast, Toaster } from "sonner";
 import build from "../../utils/dev";
 
 const RootLayout = () => {
+    const { fetchBarangays, barangays } = useBarangays();
+    console.log(barangays);
     useSetAdmin();
+    const admin = useAdminStore((state) => state.admin);
     const location = useLocation();
 
     const handleLogout = async () => {
@@ -63,6 +67,8 @@ const RootLayout = () => {
         const token = localStorage.getItem("token");
         if (!token) {
             window.location.href = "/login";
+        } else {
+            fetchBarangays();
         }
     }, []);
 
@@ -112,7 +118,8 @@ const RootLayout = () => {
                                 </Nav.Link>
                             ))}
                         </Nav>
-                        <Nav>
+                        <Nav className="d-flex gap-2">
+                            <Navbar.Text>Welcome, {admin?.name}</Navbar.Text>
                             <NavDropdown
                                 title={
                                     <FaUserCircle

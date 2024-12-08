@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-// OpenLayers imports
 import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -17,13 +16,20 @@ import Draw from "ol/interaction/Draw";
 import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
 import CircleStyle from "ol/style/Circle";
+import Select from "ol/interaction/Select";
+import Overlay from "ol/Overlay";
+import { click } from "ol/events/condition";
 import { toast, Toaster } from "sonner";
+import { useBarangays } from "../../store/barangays";
 
 const MapComponent = () => {
+    const { barangays } = useBarangays();
     const mapTargetElement = useRef(null);
+    const popoverRef = useRef(null);
 
     const [map, setMap] = useState(null);
     const [draw, setDraw] = useState(null);
+    const [popoverContent, setPopoverContent] = useState(null);
 
     const [selectedBarangay, setSelectedBarangay] = useState("");
     const [isConfigMinimized, setIsConfigMinimized] = useState(false);
@@ -31,19 +37,6 @@ const MapComponent = () => {
     const [unaffectedPlots, setUnaffectedPlots] = useState([]);
 
     const prosperidadCoords = fromLonLat([125.91532, 8.599884]);
-
-    const barangays = [
-        { name: "LUCENA", coords: fromLonLat([125.873077, 8.5666]) },
-        { name: "SAN VICENTE", coords: fromLonLat([125.857149, 8.53948]) },
-        { name: "SAN PEDRO", coords: fromLonLat([125.885786, 8.551695]) },
-        { name: "NAPO", coords: fromLonLat([125.897592, 8.544228]) },
-        { name: "LA SUERTE", coords: fromLonLat([125.896321, 8.579757]) },
-        { name: "LAS NAVAS", coords: fromLonLat([125.908064, 8.560977]) },
-        { name: "MAPAGA", coords: fromLonLat([125.885083, 8.594102]) },
-        { name: "AWA", coords: fromLonLat([125.906792, 8.641974]) },
-        { name: "AURORA", coords: fromLonLat([125.840243, 8.590985]) },
-        { name: "SAN JOAQUIN", coords: fromLonLat([125.891422, 8.635346]) },
-    ];
 
     const mapView = useMemo(
         () =>
@@ -112,19 +105,96 @@ const MapComponent = () => {
             mapInstance.updateSize();
         }, 100);
 
-        barangays.forEach((barangay) => {
-            const marker = new Feature({
-                geometry: new Point(barangay.coords),
-                name: barangay.name,
-            });
-            vectorSource.addFeature(marker);
+        const overlay = new Overlay({
+            element: popoverRef.current,
+            positioning: "center-center",
+            stopEvent: false,
         });
+        mapInstance.addOverlay(overlay);
 
         return () => {
             mapInstance.setTarget(null);
             window.removeEventListener("resize", handleResize);
         };
     }, []);
+
+    useEffect(() => {
+        if (!map || !barangays) return;
+
+        vectorSource.clear();
+
+        if (!selectedBarangay) {
+            barangays.forEach((barangay) => {
+                if (!barangay.coordinate_points) return;
+
+                try {
+                    let coordinates = JSON.parse(barangay.coordinate_points);
+
+                    if (
+                        coordinates.length === 1 &&
+                        Array.isArray(coordinates[0][0])
+                    ) {
+                        coordinates = coordinates[0];
+                    }
+
+                    const polygon = new Polygon([coordinates]);
+                    const feature = new Feature({
+                        geometry: polygon,
+                        name: barangay.barangay_name,
+                        farmers_count: barangay.farmers_count,
+                        lands_count: barangay.lands_count,
+                    });
+                    feature.setStyle(
+                        new Style({
+                            fill: new Fill({
+                                color: "rgba(0, 255, 0, 0.1)",
+                            }),
+                            stroke: new Stroke({
+                                color: "#00ff00",
+                                width: 2,
+                            }),
+                        })
+                    );
+                    vectorSource.addFeature(feature);
+                } catch (error) {
+                    console.error("Error parsing coordinates:", error);
+                }
+            });
+
+            const select = new Select({
+                condition: click,
+                layers: [vectorLayer],
+            });
+
+            select.on("select", (e) => {
+                const selectedFeature = e.selected[0];
+                if (selectedFeature) {
+                    const coordinates = selectedFeature
+                        .getGeometry()
+                        .getInteriorPoint()
+                        .getCoordinates();
+                    const farmersCount = selectedFeature.get("farmers_count");
+                    const landsCount = selectedFeature.get("lands_count");
+                    setPopoverContent(
+                        `Farmers: ${farmersCount}\nLands: ${landsCount}`
+                    );
+                    popoverRef.current.style.display = "block";
+                    map.getOverlayById(popoverRef.current).setPosition(
+                        coordinates
+                    );
+                } else {
+                    setPopoverContent(null);
+                    popoverRef.current.style.display = "none";
+                }
+            });
+
+            map.addInteraction(select);
+
+            return () => {
+                map.removeInteraction(select);
+            };
+        }
+    }, [barangays, map, vectorSource, vectorLayer, selectedBarangay]);
 
     useEffect(() => {
         vectorSource.clear();
@@ -173,12 +243,16 @@ const MapComponent = () => {
         setSelectedBarangay(selectedName);
 
         const selectedBarangay = barangays.find(
-            (barangay) => barangay.name === selectedName
+            (barangay) => barangay.barangay_name === selectedName
         );
 
         if (selectedBarangay) {
+            const coords = fromLonLat([
+                parseFloat(selectedBarangay.x_coordinate),
+                parseFloat(selectedBarangay.y_coordinate),
+            ]);
             map.getView().animate({
-                center: selectedBarangay.coords,
+                center: coords,
                 duration: 1000,
                 zoom: 17,
             });
@@ -279,14 +353,15 @@ const MapComponent = () => {
                                 onChange={handleBarangayChange}
                             >
                                 <option value="">Select a barangay</option>
-                                {barangays.map((barangay) => (
-                                    <option
-                                        key={barangay.name}
-                                        value={barangay.name}
-                                    >
-                                        {barangay.name}
-                                    </option>
-                                ))}
+                                {barangays &&
+                                    barangays.map((barangay) => (
+                                        <option
+                                            key={barangay.barangay_id}
+                                            value={barangay.barangay_name}
+                                        >
+                                            {barangay.barangay_name}
+                                        </option>
+                                    ))}
                             </select>
                         </div>
                         {selectedBarangay && (
@@ -368,7 +443,6 @@ const MapComponent = () => {
                                             onClick={() => {
                                                 setAffectedPlots([]);
                                                 setUnaffectedPlots([]);
-
                                                 toast.success(
                                                     "All plots reset"
                                                 );
@@ -387,6 +461,23 @@ const MapComponent = () => {
                     </>
                 )}
             </div>
+            {popoverContent && (
+                <div
+                    ref={popoverRef}
+                    className="popover"
+                    style={{
+                        position: "absolute",
+                        backgroundColor: "white",
+                        padding: "10px",
+                        borderRadius: "5px",
+                        boxShadow: "0 0 10px rgba(0,0,0,0.5)",
+                        zIndex: 1000,
+                        display: popoverContent ? "block" : "none",
+                    }}
+                >
+                    {popoverContent}
+                </div>
+            )}
         </div>
     );
 };

@@ -249,7 +249,7 @@ const Home = () => {
                     <Row>
                         <Col className="text-center py-3">
                             <p style={styles.footerText}>
-                                © 2023 MAO CIS. All rights reserved.
+                                © 2024 MAO CIS. All rights reserved.
                             </p>
                         </Col>
                     </Row>
