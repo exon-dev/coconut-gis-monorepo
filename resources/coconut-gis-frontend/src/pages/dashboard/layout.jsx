@@ -43,20 +43,20 @@ const RootLayout = () => {
     };
 
     const navItems = [
-        { path: "/dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
-        { path: "/dashboard/map", label: "Map", icon: <FaMap /> },
+        { path: "/dashboard", label: "Home", icon: <FaTachometerAlt /> },
+        {
+            path: "/dashboard/programs",
+            label: "Programs",
+            icon: <FaCalendarAlt />,
+        },
         { path: "/dashboard/profiles", label: "Profiles", icon: <FaUser /> },
         { path: "/dashboard/accounts", label: "Accounts", icon: <FaUsers /> },
         {
             path: "/dashboard/market",
-            label: "Market",
+            label: "Trade & Market",
             icon: <FaShoppingCart />,
         },
-        {
-            path: "/dashboard/lgu-activities",
-            label: "LGU Activities",
-            icon: <FaCalendarAlt />,
-        },
+        { path: "/dashboard/map", label: "Map", icon: <FaMap /> },
     ];
 
     useEffect(() => {
@@ -84,7 +84,7 @@ const RootLayout = () => {
                                 marginRight: "0.5rem",
                             }}
                         />
-                        CocoFarm
+                        MAO-CIS
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">

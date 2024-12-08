@@ -22,7 +22,7 @@ const Home = () => {
             <Navbar bg="dark" variant="dark" expand="lg" style={styles.navbar}>
                 <Container>
                     <Navbar.Brand href="#home" style={styles.logo}>
-                        <FaLeaf style={styles.logoIcon} /> CocoFarm
+                        <FaLeaf style={styles.logoIcon} /> MAO CIS
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
@@ -52,7 +52,7 @@ const Home = () => {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1 }}
                         >
-                            Welcome Farmer!
+                            MAO Coconut Information Systems
                         </motion.h1>
                         <motion.p
                             style={styles.subParagraph}
@@ -89,7 +89,7 @@ const Home = () => {
                             <h2 style={styles.sectionHeader}>About</h2>
                             <div style={styles.cardContainer}>
                                 <p style={styles.text}>
-                                    CocoFarm is a web-based GIS mapping system
+                                    MAO CIS is a web-based GIS mapping system
                                     designed to help farmers in Agusan Del Sur
                                     manage and monitor their coconut farms
                                     efficiently. Our platform integrates modern
@@ -222,7 +222,7 @@ const Home = () => {
                 <Container>
                     <Row>
                         <Col md={4} className="text-center text-md-left">
-                            <h5 style={styles.footerHeader}>CocoFarm</h5>
+                            <h5 style={styles.footerHeader}>MAO CIS</h5>
                             <p style={styles.footerText}>
                                 Empowering coconut farmers with modern
                                 technology.
@@ -239,7 +239,7 @@ const Home = () => {
                         <Col md={4} className="text-center text-md-right">
                             <h5 style={styles.footerHeader}>Contact Us</h5>
                             <p style={styles.footerText}>
-                                Email: info@cocofarm.com
+                                Email: info@maocis.com
                             </p>
                             <p style={styles.footerText}>
                                 Phone: +63 123 456 7890
@@ -249,7 +249,7 @@ const Home = () => {
                     <Row>
                         <Col className="text-center py-3">
                             <p style={styles.footerText}>
-                                © 2023 CocoFarm. All rights reserved.
+                                © 2023 MAO CIS. All rights reserved.
                             </p>
                         </Col>
                     </Row>

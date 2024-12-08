@@ -26,7 +26,7 @@ const App = () => {
                     <Route path="profiles" element={<Profiles />} />
                     <Route path="accounts" element={<Accounts />} />
                     <Route path="market" element={<Market />} />
-                    <Route path="lgu-activities" element={<LGUActivities />} />
+                    <Route path="programs" element={<LGUActivities />} />
                 </Route>
             </Routes>
         </Router>

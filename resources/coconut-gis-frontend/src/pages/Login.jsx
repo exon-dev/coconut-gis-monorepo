@@ -50,7 +50,7 @@ const Login = () => {
             localStorage.setItem("token", response.accessToken);
             localStorage.setItem("admin", JSON.stringify(response.admin));
 
-            window.location.href = "/dashboard/map";
+            window.location.href = "/dashboard";
         } catch (err) {
             toast.error("Invalid email or password");
             throw new Error(err);
@@ -79,7 +79,7 @@ const Login = () => {
                             <div style={styles.card}>
                                 <Link to="/" style={styles.logo}>
                                     <FaLeaf style={styles.logoIcon} />
-                                    <h2 style={styles.title}>CocoFarm</h2>
+                                    <h2 style={styles.title}>MAO-CIS</h2>
                                 </Link>
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group controlId="formBasicEmail">
