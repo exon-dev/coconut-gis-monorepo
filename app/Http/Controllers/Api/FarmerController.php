@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Exception;
 
 use App\Models\Farmer;
 
@@ -38,6 +39,26 @@ class FarmerController extends Controller
                 201
             );
         } catch (\Exception $e) {
+            return response()->json(
+                [
+                    'message' => 'Error: ' . $e->getMessage(),
+                ],
+                500
+            );
+        }
+    }
+
+    public function get_farmers_with_number_of_lands()
+    {
+        try {
+            $farmers = Farmer::withCount('lands')->get();
+
+            if (!$farmers) {
+                return response()->json(['message' => 'No farmers found'], 404);
+            }
+
+            return response()->json($farmers);
+        } catch (Exception $e) {
             return response()->json(
                 [
                     'message' => 'Error: ' . $e->getMessage(),

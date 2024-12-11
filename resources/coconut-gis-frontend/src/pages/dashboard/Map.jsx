@@ -21,11 +21,19 @@ import Overlay from "ol/Overlay";
 import { click } from "ol/events/condition";
 import { toast, Toaster } from "sonner";
 import { useBarangays } from "../../store/barangays";
+import build from "../../utils/dev";
 
 const MapComponent = () => {
     const { barangays } = useBarangays();
     const mapTargetElement = useRef(null);
     const popoverRef = useRef(null);
+
+    const [details, setDetails] = useState({
+        name: "",
+        gender: "",
+        barangay_id: null,
+        number_of_coconut_trees: 0,
+    });
 
     const [map, setMap] = useState(null);
     const [draw, setDraw] = useState(null);
@@ -241,6 +249,16 @@ const MapComponent = () => {
     const handleBarangayChange = (e) => {
         const selectedName = e.target.value;
         setSelectedBarangay(selectedName);
+        const selectedBarangayIndex = barangays.findIndex(
+            (barangay) => barangay.barangay_name === selectedName
+        );
+
+        if (selectedBarangayIndex === -1) return;
+
+        setDetails({
+            ...details,
+            barangay_id: barangays[selectedBarangayIndex].barangay_id,
+        });
 
         const selectedBarangay = barangays.find(
             (barangay) => barangay.barangay_name === selectedName
@@ -256,6 +274,117 @@ const MapComponent = () => {
                 duration: 1000,
                 zoom: 17,
             });
+        }
+    };
+
+    const handleSaveNewFarmer = async () => {
+        if (Object.values(details).some((value) => !value)) {
+            toast.error("Please fill out all fields.");
+            return;
+        }
+
+        if (affectedPlots.length === 0 && unaffectedPlots.length === 0) {
+            toast.error("Please select at least one plot.");
+            return;
+        }
+
+        try {
+            const response = await fetch(build("farmer/create"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                    name: details.name,
+                    gender: details.gender,
+                    number_of_coconut_trees: Number(
+                        details.number_of_coconut_trees
+                    ),
+                    barangay_id: details.barangay_id,
+                }),
+            });
+
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await response.json();
+
+                //also for this one
+                const uniqueAffectedPlots = affectedPlots.filter(
+                    (plot) =>
+                        !unaffectedPlots.some(
+                            (unaffectedPlot) =>
+                                JSON.stringify(unaffectedPlot) ===
+                                JSON.stringify(plot)
+                        )
+                );
+
+                //still problem here
+                const uniqueUnaffectedPlots = unaffectedPlots.filter(
+                    (plot) =>
+                        !affectedPlots.some(
+                            (affectedPlot) =>
+                                JSON.stringify(affectedPlot) ===
+                                JSON.stringify(plot)
+                        )
+                );
+
+                uniqueAffectedPlots.forEach(async (plot) => {
+                    const response = await fetch(build("land/create"), {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                        body: JSON.stringify({
+                            is_affected: true,
+                            land_location: JSON.stringify(
+                                plot.flatMap(([x, y]) => [y, x])
+                            ),
+                            farmer_id: data.farmer_id,
+                            barangay_id: details.barangay_id,
+                        }),
+                    }).then((res) => res.json());
+
+                    if (response.status !== 201) {
+                        throw new Error("Error saving affected land.");
+                    }
+                });
+
+                uniqueUnaffectedPlots.forEach(async (plot) => {
+                    const response = await fetch(build("land/create"), {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                        body: JSON.stringify({
+                            is_affected: false,
+                            land_location: JSON.stringify(
+                                plot.flatMap(([x, y]) => [y, x])
+                            ),
+                            farmer_id: data.farmer_id,
+                            barangay_id: details.barangay_id,
+                        }),
+                    }).then((res) => res.json());
+
+                    if (response.status !== 201) {
+                        throw new Error("Error saving affected land.");
+                    }
+                });
+            } else {
+                const text = await response.text();
+                console.error("Response is not JSON:", text);
+                toast.error("Error saving new farmer. Please try again.");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error saving new farmer. Please try again.");
+            return new Error(err);
         }
     };
 
@@ -373,11 +502,25 @@ const MapComponent = () => {
                                     <input
                                         type="text"
                                         className="form-control"
+                                        onChange={(e) => {
+                                            setDetails({
+                                                ...details,
+                                                name: e.target.value,
+                                            });
+                                        }}
                                     />
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label">Gender</label>
-                                    <select className="form-select">
+                                    <select
+                                        className="form-select"
+                                        onChange={(e) => {
+                                            setDetails({
+                                                ...details,
+                                                gender: e.target.value,
+                                            });
+                                        }}
+                                    >
                                         <option value="">Select gender</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
@@ -401,6 +544,13 @@ const MapComponent = () => {
                                     <input
                                         type="number"
                                         className="form-control"
+                                        onChange={(e) => {
+                                            setDetails({
+                                                ...details,
+                                                number_of_coconut_trees:
+                                                    e.target.value,
+                                            });
+                                        }}
                                     />
                                 </div>
                                 <div className="mb-3">
@@ -451,7 +601,10 @@ const MapComponent = () => {
                                         >
                                             Reset All Plots
                                         </button>
-                                        <button className="btn btn-warning">
+                                        <button
+                                            onClick={handleSaveNewFarmer}
+                                            className="btn btn-warning"
+                                        >
                                             Save
                                         </button>
                                     </div>

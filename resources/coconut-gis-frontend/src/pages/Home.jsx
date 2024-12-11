@@ -68,7 +68,11 @@ const Home = () => {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1, delay: 1 }}
                         >
-                            <Button variant="dark" size="lg">
+                            <Button
+                                onClick={handleRedirectLogin}
+                                variant="dark"
+                                size="lg"
+                            >
                                 Get Started
                             </Button>
                         </motion.div>

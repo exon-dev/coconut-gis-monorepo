@@ -2,8 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangayController;
+use App\Http\Controllers\Api\FarmerController;
+use App\Http\Controllers\Api\LandController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -29,6 +32,19 @@ Route::group(['prefix' => 'auth'], function () {
 
 Route::group(['prefix' => 'barangay'], function () {
     Route::get('/all', [BarangayController::class, 'index'])->middleware(
+        'auth:sanctum'
+    );
+});
+
+Route::group(['prefix' => 'farmer'], function () {
+    Route::post('/create', [
+        FarmerController::class,
+        'create_farmer',
+    ])->middleware('auth:sanctum');
+});
+
+Route::group(['prefix' => 'land'], function () {
+    Route::post('/create', [LandController::class, 'create_land'])->middleware(
         'auth:sanctum'
     );
 });
