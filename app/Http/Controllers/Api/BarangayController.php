@@ -16,4 +16,10 @@ class BarangayController extends Controller
         $barangays = Barangay::withCount(['farmers', 'lands'])->get();
         return response()->json($barangays);
     }
+
+    public function get_list_of_farmers(int $barangay_id)
+    {
+        $farmers = Barangay::find($barangay_id)->farmers;
+        return response()->json($farmers);
+    }
 }

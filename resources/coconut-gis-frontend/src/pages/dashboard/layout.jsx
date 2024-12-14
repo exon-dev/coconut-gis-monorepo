@@ -17,8 +17,7 @@ import { toast, Toaster } from "sonner";
 import build from "../../utils/dev";
 
 const RootLayout = () => {
-    const { fetchBarangays, barangays } = useBarangays();
-    console.log(barangays);
+    const { fetchBarangays } = useBarangays();
     useSetAdmin();
     const admin = useAdminStore((state) => state.admin);
     const location = useLocation();
@@ -60,7 +59,12 @@ const RootLayout = () => {
             label: "Trade & Market",
             icon: <FaShoppingCart />,
         },
-        { path: "/dashboard/map", label: "Map", icon: <FaMap /> },
+        {
+            path: "/dashboard/map",
+            label: "Map",
+            icon: <FaMap />,
+            style: { width: "100%", height: "100vh" },
+        },
     ];
 
     useEffect(() => {
@@ -73,7 +77,13 @@ const RootLayout = () => {
     }, []);
 
     return (
-        <div>
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                minHeight: "100vh",
+            }}
+        >
             <Toaster richColors position="top-center" />
             <Navbar
                 bg="light"
@@ -148,7 +158,7 @@ const RootLayout = () => {
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
-            <Container style={{ marginTop: "3rem", marginLeft: "-10px" }}>
+            <Container>
                 <Outlet />
             </Container>
         </div>

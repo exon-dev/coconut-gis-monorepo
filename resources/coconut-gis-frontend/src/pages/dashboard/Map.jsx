@@ -432,7 +432,7 @@ const MapComponent = () => {
                 height: "100vh",
                 width: "100vw",
                 position: "relative",
-                margin: 0,
+                marginTop: "4rem",
                 padding: 0,
             }}
             ref={mapTargetElement}

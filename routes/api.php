@@ -34,6 +34,10 @@ Route::group(['prefix' => 'barangay'], function () {
     Route::get('/all', [BarangayController::class, 'index'])->middleware(
         'auth:sanctum'
     );
+    Route::get('/{barangay_id}/farmers', [
+        BarangayController::class,
+        'get_list_of_farmers',
+    ])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'farmer'], function () {
