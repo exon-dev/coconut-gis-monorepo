@@ -45,6 +45,11 @@ Route::group(['prefix' => 'farmer'], function () {
         FarmerController::class,
         'create_farmer',
     ])->middleware('auth:sanctum');
+
+    Route::get('/all', [
+        FarmerController::class,
+        'get_farmers_with_details',
+    ])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'land'], function () {

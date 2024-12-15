@@ -12,4 +12,14 @@ class Land extends Model
     protected $primaryKey = 'land_id';
 
     protected $guarded = [];
+
+    public function farmer()
+    {
+        return $this->belongsTo(Farmer::class);
+    }
+
+    public function barangay()
+    {
+        return $this->belongsTo(Barangay::class);
+    }
 }

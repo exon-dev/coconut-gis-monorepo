@@ -376,6 +376,8 @@ const MapComponent = () => {
                         throw new Error("Error saving affected land.");
                     }
                 });
+
+                toast.success("Farmer successfully saved!");
             } else {
                 const text = await response.text();
                 console.error("Response is not JSON:", text);

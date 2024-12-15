@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Exception;
 
 use App\Models\Farmer;
+use App\Models\Land;
 
 class FarmerController extends Controller
 {
@@ -63,6 +64,35 @@ class FarmerController extends Controller
                 [
                     'message' => 'Error: ' . $e->getMessage(),
                 ],
+                500
+            );
+        }
+    }
+
+    public function get_farmers_with_details(Request $request)
+    {
+        try {
+            $perPage = 10;
+            $currentPage = intval($request->input('page', 1));
+            $sortOption = $request->input('sort', 'name');
+
+            $allowedSortOptions = ['name', 'created_at'];
+            if (!in_array($sortOption, $allowedSortOptions)) {
+                $sortOption = 'name';
+            }
+
+            $farmers = Farmer::with(['barangay'])
+                ->orderBy($sortOption)
+                ->paginate($perPage, ['*'], 'page', $currentPage);
+
+            if ($farmers->isEmpty()) {
+                return response()->json(['message' => 'No farmers found'], 404);
+            }
+
+            return response()->json($farmers);
+        } catch (\Exception $e) {
+            return response()->json(
+                ['message' => 'Error: ' . $e->getMessage()],
                 500
             );
         }

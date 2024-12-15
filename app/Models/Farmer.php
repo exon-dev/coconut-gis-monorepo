@@ -16,13 +16,8 @@ class Farmer extends Model
 
     protected $guarded = [];
 
-    public function land()
-    {
-        return $this->hasOne(Land::class);
-    }
-
     public function barangay()
     {
-        return $this->hasOne(Barangay::class);
+        return $this->belongsTo(Barangay::class, 'barangay_id', 'barangay_id');
     }
 }
