@@ -14,7 +14,7 @@ const Profiles = () => {
     const [selectedProfile, setSelectedProfile] = useState(null);
 
     const totalProfiles = 100;
-    const profilesPerPage = 10;
+    const profilesPerPage = 5;
 
     useEffect(() => {
         fetchProfiles();
@@ -41,8 +41,7 @@ const Profiles = () => {
                 toast.error(response.message);
                 return new Error(response.message);
             }
-
-            setProfiles(response.data);
+            setProfiles(response);
         } catch (error) {
             console.error("Error fetching profiles:", error);
         }
@@ -117,7 +116,7 @@ const Profiles = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {profiles.map((profile) => (
+                            {profiles?.map((profile) => (
                                 <tr key={profile.farmer_id}>
                                     <td>{profile.farmer_id}</td>
                                     <td>{profile.name}</td>
@@ -143,7 +142,7 @@ const Profiles = () => {
                             ...Array(
                                 Math.ceil(totalProfiles / profilesPerPage)
                             ).keys(),
-                        ].map((page) => (
+                        ]?.map((page) => (
                             <Pagination.Item
                                 key={page + 1}
                                 active={page + 1 === currentPage}
@@ -199,7 +198,6 @@ const styles = {
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        backgroundColor: "#f8f9fa",
         paddingTop: "6rem",
         height: "100vh",
     },
@@ -217,7 +215,7 @@ const styles = {
     },
     tableContainer: {
         width: "100%",
-        maxWidth: "800px",
+        maxWidth: "1200px",
         backgroundColor: "#fff",
         borderRadius: "12px",
         boxShadow: "0 8px 16px rgba(0,0,0,0.2)",

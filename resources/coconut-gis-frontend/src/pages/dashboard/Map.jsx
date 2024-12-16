@@ -44,6 +44,12 @@ const MapComponent = () => {
     const [affectedPlots, setAffectedPlots] = useState([]);
     const [unaffectedPlots, setUnaffectedPlots] = useState([]);
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const [farmers, setFarmers] = useState([]);
+    const [selectedFarmer, setSelectedFarmer] = useState({});
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
     const prosperidadCoords = fromLonLat([125.91532, 8.599884]);
 
     const mapView = useMemo(
@@ -144,6 +150,8 @@ const MapComponent = () => {
                     ) {
                         coordinates = coordinates[0];
                     }
+
+                    console.log(coordinates);
 
                     const polygon = new Polygon([coordinates]);
                     const feature = new Feature({
@@ -288,6 +296,10 @@ const MapComponent = () => {
             return;
         }
 
+        setIsLoading(true);
+
+        if (isLoading) toast.loading("Saving new farmer, Please wait");
+
         try {
             const response = await fetch(build("farmer/create"), {
                 method: "POST",
@@ -309,7 +321,6 @@ const MapComponent = () => {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 const data = await response.json();
 
-                //also for this one
                 const uniqueAffectedPlots = affectedPlots.filter(
                     (plot) =>
                         !unaffectedPlots.some(
@@ -319,7 +330,6 @@ const MapComponent = () => {
                         )
                 );
 
-                //still problem here
                 const uniqueUnaffectedPlots = unaffectedPlots.filter(
                     (plot) =>
                         !affectedPlots.some(
@@ -329,55 +339,52 @@ const MapComponent = () => {
                         )
                 );
 
-                uniqueAffectedPlots.forEach(async (plot) => {
-                    const response = await fetch(build("land/create"), {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                        },
-                        body: JSON.stringify({
-                            is_affected: true,
-                            land_location: JSON.stringify(
-                                plot.flatMap(([x, y]) => [y, x])
-                            ),
-                            farmer_id: data.farmer_id,
-                            barangay_id: details.barangay_id,
-                        }),
-                    }).then((res) => res.json());
+                const responseAffected = await fetch(build("land/create"), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                    body: JSON.stringify({
+                        is_affected: true,
+                        land_location: JSON.stringify(
+                            uniqueAffectedPlots.flatMap(([x, y]) => [y, x])
+                        ),
+                        farmer_id: data.farmer_id,
+                        barangay_id: details.barangay_id,
+                    }),
+                }).then((res) => res.json());
 
-                    if (response.status !== 201) {
-                        throw new Error("Error saving affected land.");
-                    }
-                });
+                if (responseAffected.status !== 201) {
+                    throw new Error("Error saving affected land.");
+                }
 
-                uniqueUnaffectedPlots.forEach(async (plot) => {
-                    const response = await fetch(build("land/create"), {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                        },
-                        body: JSON.stringify({
-                            is_affected: false,
-                            land_location: JSON.stringify(
-                                plot.flatMap(([x, y]) => [y, x])
-                            ),
-                            farmer_id: data.farmer_id,
-                            barangay_id: details.barangay_id,
-                        }),
-                    }).then((res) => res.json());
+                const responseUnaffected = await fetch(build("land/create"), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                    body: JSON.stringify({
+                        is_affected: false,
+                        land_location: JSON.stringify(
+                            uniqueUnaffectedPlots.flatMap(([x, y]) => [y, x])
+                        ),
+                        farmer_id: data.farmer_id,
+                        barangay_id: details.barangay_id,
+                    }),
+                }).then((res) => res.json());
 
-                    if (response.status !== 201) {
-                        throw new Error("Error saving affected land.");
-                    }
-                });
+                if (responseUnaffected.status !== 201) {
+                    throw new Error("Error saving unaffected land.");
+                }
 
                 toast.success("Farmer successfully saved!");
+                fetchFarmers("");
             } else {
                 const text = await response.text();
                 console.error("Response is not JSON:", text);
@@ -387,6 +394,8 @@ const MapComponent = () => {
             console.error(err);
             toast.error("Error saving new farmer. Please try again.");
             return new Error(err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -427,6 +436,114 @@ const MapComponent = () => {
         map.addInteraction(newDraw);
     };
 
+    const fetchFarmers = async (query) => {
+        try {
+            const response = await fetch(build(`farmer/all?search=${query}`), {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+            const data = await response.json();
+            setFarmers(data);
+        } catch (error) {
+            console.error("Error fetching farmers:", error);
+        }
+    };
+
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchTerm(query);
+        setShowDropdown(true);
+        fetchFarmers(query);
+    };
+
+    const handleFarmerSelect = (farmer) => {
+        setSearchTerm(farmer.name);
+        setShowDropdown(false);
+        setSelectedFarmer(farmer);
+
+        setDetails({
+            name: selectedFarmer.name,
+            gender: selectedFarmer.gender,
+            barangay_id: selectedFarmer.barangay.barangay_id,
+            number_of_coconut_trees: selectedFarmer.number_of_coconut_trees,
+        });
+
+        setSelectedBarangay(selectedFarmer.barangay.barangay_name);
+
+        const coords = fromLonLat([
+            parseFloat(selectedFarmer.barangay.x_coordinate),
+            parseFloat(selectedFarmer.barangay.y_coordinate),
+        ]);
+        map.getView().animate({
+            center: coords,
+            duration: 1000,
+            zoom: 17,
+        });
+
+        selectedFarmer.lands.forEach((land) => {
+            if (land.is_affected) {
+                let coordinates = JSON.parse(land.land_location);
+
+                if (
+                    coordinates.length === 1 &&
+                    Array.isArray(coordinates[0][0])
+                ) {
+                    coordinates = coordinates[0];
+                }
+
+                console.log(coordinates);
+
+                const polygon = new Polygon([coordinates]);
+                const feature = new Feature({
+                    geometry: polygon,
+                });
+                feature.setStyle(
+                    new Style({
+                        fill: new Fill({
+                            color: "rgba(255, 0, 0, 0.5)",
+                        }),
+                        stroke: new Stroke({
+                            color: "#ff0000",
+                            width: 2,
+                        }),
+                    })
+                );
+                vectorSource.addFeature(feature);
+            } else {
+                let coordinates = JSON.parse(land.land_location);
+
+                if (
+                    coordinates.length === 1 &&
+                    Array.isArray(coordinates[0][0])
+                ) {
+                    coordinates = coordinates[0];
+                }
+
+                console.log(coordinates);
+
+                const polygon = new Polygon([coordinates]);
+                const feature = new Feature({
+                    geometry: polygon,
+                });
+                feature.setStyle(
+                    new Style({
+                        fill: new Fill({
+                            color: "rgba(0, 255, 0, 0.5)",
+                        }),
+                        stroke: new Stroke({
+                            color: "#00ff00",
+                            width: 2,
+                        }),
+                    })
+                );
+                vectorSource.addFeature(feature);
+            }
+        });
+    };
+
     return (
         <div
             id="map"
@@ -460,7 +577,7 @@ const MapComponent = () => {
                 </div>
                 {!isConfigMinimized && (
                     <>
-                        <div className="input-group mb-3">
+                        <div className="input-group mb-3 ">
                             <span className="input-group-text">
                                 <i className="bi bi-search"></i>
                             </span>
@@ -468,7 +585,36 @@ const MapComponent = () => {
                                 type="text"
                                 className="form-control"
                                 placeholder="Search"
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                onFocus={() => setShowDropdown(true)}
                             />
+                            {showDropdown && farmers.length > 0 && (
+                                <ul
+                                    className="dropdown-menu show"
+                                    style={{
+                                        position: "absolute",
+                                        top: "100%",
+                                        left: 0,
+                                        right: 0,
+                                        zIndex: 1000,
+                                        maxHeight: "200px",
+                                        overflowY: "auto",
+                                    }}
+                                >
+                                    {farmers.map((farmer) => (
+                                        <li
+                                            key={farmer.id}
+                                            className="dropdown-item"
+                                            onClick={() =>
+                                                handleFarmerSelect(farmer)
+                                            }
+                                        >
+                                            {farmer.name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                         <div className="mb-3">
                             <label
@@ -504,6 +650,7 @@ const MapComponent = () => {
                                     <input
                                         type="text"
                                         className="form-control"
+                                        value={details.name ?? ""}
                                         onChange={(e) => {
                                             setDetails({
                                                 ...details,
@@ -546,6 +693,9 @@ const MapComponent = () => {
                                     <input
                                         type="number"
                                         className="form-control"
+                                        placeholder={
+                                            details.number_of_coconut_trees ?? 0
+                                        }
                                         onChange={(e) => {
                                             setDetails({
                                                 ...details,

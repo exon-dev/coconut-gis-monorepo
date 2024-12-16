@@ -227,7 +227,6 @@ const styles = {
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        backgroundColor: "#f8f9fa",
         paddingTop: "6rem",
     },
     cardContainer: {

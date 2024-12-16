@@ -189,7 +189,6 @@ const styles = {
         padding: "2rem",
         height: "100vh",
         width: "100vw",
-        backgroundColor: "#f8f9fa",
         paddingTop: "5rem",
     },
     leftContainer: {
