@@ -81,13 +81,25 @@ class FarmerController extends Controller
                 $sortOption = 'name';
             }
 
-            $farmers = Farmer::with(['barangay'])
+            $farmersDetails = Farmer::with(['barangay'])
                 ->orderBy($sortOption)
                 ->paginate($perPage, ['*'], 'page', $currentPage);
 
-            if ($farmers->isEmpty()) {
+            if ($farmersDetails->isEmpty()) {
                 return response()->json(['message' => 'No farmers found'], 404);
             }
+
+            $lands = Land::select('*')
+                ->join('farmers', 'lands.farmer_id', '=', 'farmers.farmer_id')
+                ->get();
+
+            // combine each farmer and their barangay and lands in a single object
+            $farmers = $farmersDetails->map(function ($farmer) use ($lands) {
+                $farmer->lands = $lands
+                    ->where('farmer_id', $farmer->farmer_id)
+                    ->values();
+                return $farmer;
+            });
 
             return response()->json($farmers);
         } catch (\Exception $e) {
