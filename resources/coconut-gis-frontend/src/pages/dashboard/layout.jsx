@@ -6,7 +6,6 @@ import {
     FaTachometerAlt,
     FaMap,
     FaUser,
-    FaUsers,
     FaShoppingCart,
     FaCalendarAlt,
     FaUserCircle,
@@ -15,6 +14,7 @@ import { useAdminStore, useSetAdmin } from "../../store/admin";
 import { useBarangays } from "../../store/barangays";
 import { toast, Toaster } from "sonner";
 import build from "../../utils/dev";
+import logo from "../../assets/logo.png";
 
 const RootLayout = () => {
     const { fetchBarangays } = useBarangays();
@@ -92,14 +92,16 @@ const RootLayout = () => {
                 style={{ width: "100%" }}
             >
                 <Container>
-                    <Navbar.Brand as={Link} to="/dashboard">
-                        <FaLeaf
-                            style={{
-                                fontSize: "2rem",
-                                color: "#27ae60",
-                                marginRight: "0.5rem",
-                            }}
-                        />
+                    <Navbar.Brand
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                        }}
+                        as={Link}
+                        to="/dashboard"
+                    >
+                        <img src={logo} alt="logo" style={{ width: "35px" }} />
                         MAO-CIS
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />

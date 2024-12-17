@@ -1,16 +1,17 @@
 // Home.jsx
 import { Container, Navbar, Nav, Button, Row, Col } from "react-bootstrap";
 import {
-    FaLeaf,
     FaReact,
     FaLaravel,
     FaFacebook,
     FaTwitter,
     FaInstagram,
+    FaLeaf,
 } from "react-icons/fa";
 import { SiPostgresql, SiOpenlayers } from "react-icons/si";
 import { motion } from "framer-motion";
 import bg from "../assets/background.jpg";
+import logo from "../assets/logo.png";
 
 const Home = () => {
     const handleRedirectLogin = () => {
@@ -21,8 +22,22 @@ const Home = () => {
         <div style={styles.page}>
             <Navbar bg="dark" variant="dark" expand="lg" style={styles.navbar}>
                 <Container>
-                    <Navbar.Brand href="#home" style={styles.logo}>
-                        <FaLeaf style={styles.logoIcon} /> MAO CIS
+                    <Navbar.Brand
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                        }}
+                        href="#home"
+                    >
+                        <img
+                            src={logo}
+                            alt="Logo of MAO CIS"
+                            style={{
+                                width: "35px",
+                            }}
+                        />{" "}
+                        MAO CIS
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">

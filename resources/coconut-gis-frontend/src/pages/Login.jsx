@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import build from "../utils/dev";
 import { motion } from "framer-motion";
+import logo from "../assets/logo.png";
 
 import { toast, Toaster } from "sonner";
 
@@ -78,7 +79,11 @@ const Login = () => {
                         <Col md={4}>
                             <div style={styles.card}>
                                 <Link to="/" style={styles.logo}>
-                                    <FaLeaf style={styles.logoIcon} />
+                                    <img
+                                        src={logo}
+                                        alt="logo"
+                                        style={{ width: "40px" }}
+                                    />
                                     <h2 style={styles.title}>MAO-CIS</h2>
                                 </Link>
                                 <Form onSubmit={handleSubmit}>
@@ -212,6 +217,7 @@ const styles = {
         marginBottom: "1.5rem",
         textDecoration: "none",
         cursor: "pointer",
+        gap: "0.5rem",
     },
     logoIcon: {
         fontSize: "2.5rem",
