@@ -53,7 +53,7 @@ const RootLayout = () => {
             icon: <FaCalendarAlt />,
         },
         { path: "/dashboard/profiles", label: "Profiles", icon: <FaUser /> },
-        { path: "/dashboard/accounts", label: "Accounts", icon: <FaUsers /> },
+
         {
             path: "/dashboard/market",
             label: "Trade & Market",

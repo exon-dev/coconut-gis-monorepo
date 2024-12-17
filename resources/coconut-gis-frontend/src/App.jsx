@@ -9,7 +9,6 @@ import {
     Dashboard,
     Map,
     Profiles,
-    Accounts,
     Market,
     LGUActivities,
 } from "./pages/dashboard";
@@ -24,7 +23,6 @@ const App = () => {
                     <Route path="" element={<Dashboard />} />
                     <Route path="map" element={<Map />} />
                     <Route path="profiles" element={<Profiles />} />
-                    <Route path="accounts" element={<Accounts />} />
                     <Route path="market" element={<Market />} />
                     <Route path="programs" element={<LGUActivities />} />
                 </Route>
