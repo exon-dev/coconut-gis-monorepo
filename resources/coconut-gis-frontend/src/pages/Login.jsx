@@ -2,18 +2,18 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
 import {
-    FaLeaf,
     FaEnvelope,
     FaLock,
     FaEye,
     FaEyeSlash,
     FaSpinner,
 } from "react-icons/fa";
-import build from "../utils/dev";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa";
 import { motion } from "framer-motion";
-import logo from "../assets/logo.png";
-
+import build from "../utils/dev";
 import { toast, Toaster } from "sonner";
+import logo from "../assets/logo.png";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -24,18 +24,12 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Handle login logic here
         setLoading(true);
         try {
             const response = await fetch(build("auth/login"), {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
             }).then((res) => res.json());
 
             if (rememberMe) {
@@ -50,145 +44,200 @@ const Login = () => {
 
             localStorage.setItem("token", response.accessToken);
             localStorage.setItem("admin", JSON.stringify(response.admin));
-
             window.location.href = "/dashboard";
         } catch (err) {
             toast.error("Invalid email or password");
-            throw new Error(err);
+            return new Error(err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        const email = localStorage.getItem("email");
-        const password = localStorage.getItem("password");
-
-        if (email && password) {
-            setEmail(email);
-            setPassword(password);
+        const savedEmail = localStorage.getItem("email");
+        const savedPassword = localStorage.getItem("password");
+        if (savedEmail && savedPassword) {
+            setEmail(savedEmail);
+            setPassword(savedPassword);
         }
     }, []);
 
     return (
-        <div className="">
+        <Container fluid className="p-0" style={styles.page}>
             <Toaster richColors position="top-center" />
-            <div style={styles.page}>
-                <Container>
-                    <Row className="justify-content-center">
-                        <Col md={4}>
-                            <div style={styles.card}>
-                                <Link to="/" style={styles.logo}>
-                                    <img
-                                        src={logo}
-                                        alt="logo"
-                                        style={{ width: "40px" }}
+            <Row className="g-0">
+                {/* Left Side: Login Form */}
+                <Col
+                    md={6}
+                    className="d-flex align-items-center justify-content-center bg-white p-5"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, x: -100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="w-100"
+                        style={{ maxWidth: "400px" }}
+                    >
+                        <div className="d-flex align-items-center justify-content-center mb-4">
+                            <img
+                                src={logo}
+                                alt="logo"
+                                style={{ width: "40px", marginRight: "10px" }}
+                            />
+                            <h2 className="fw-bold text-success">MAO-CIS</h2>
+                        </div>
+                        <h4 className="mb-3 fw-bold text-success text-center">
+                            Log in to your Account
+                        </h4>
+                        <p className="text-muted mb-4 text-center">
+                            Welcome back! Select a method to log in:
+                        </p>
+                        <div className="d-flex mb-4">
+                            <Button
+                                variant="outline-secondary"
+                                className="me-2 w-100"
+                            >
+                                <FcGoogle size={20} className="me-2" />
+                                Google
+                            </Button>
+                            <Button variant="outline-primary" className="w-100">
+                                <FaFacebook size={20} className="me-2" />
+                                Facebook
+                            </Button>
+                        </div>
+                        <Form onSubmit={handleSubmit}>
+                            <Form.Group
+                                className="mb-3"
+                                controlId="formBasicEmail"
+                            >
+                                <Form.Label>Email</Form.Label>
+                                <InputGroup>
+                                    <InputGroup.Text>
+                                        <FaEnvelope />
+                                    </InputGroup.Text>
+                                    <Form.Control
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        value={email}
+                                        onChange={(e) =>
+                                            setEmail(e.target.value)
+                                        }
+                                        required
                                     />
-                                    <h2 style={styles.title}>MAO-CIS</h2>
-                                </Link>
-                                <Form onSubmit={handleSubmit}>
-                                    <Form.Group controlId="formBasicEmail">
-                                        <Form.Label style={styles.label}>
-                                            Email address
-                                        </Form.Label>
-                                        <InputGroup>
-                                            <InputGroup.Text>
-                                                <FaEnvelope />
-                                            </InputGroup.Text>
-                                            <Form.Control
-                                                type="email"
-                                                placeholder="Enter email"
-                                                value={email}
-                                                autoComplete="off"
-                                                onChange={(e) =>
-                                                    setEmail(e.target.value)
-                                                }
-                                                required
-                                                style={styles.input}
-                                            />
-                                        </InputGroup>
-                                    </Form.Group>
-
-                                    <Form.Group controlId="formBasicPassword">
-                                        <Form.Label style={styles.label}>
-                                            Password
-                                        </Form.Label>
-                                        <InputGroup>
-                                            <InputGroup.Text>
-                                                <FaLock />
-                                            </InputGroup.Text>
-                                            <Form.Control
-                                                type={
-                                                    showPassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                required
-                                                placeholder="Password"
-                                                value={password}
-                                                onChange={(e) =>
-                                                    setPassword(e.target.value)
-                                                }
-                                                style={styles.input}
-                                            />
-                                            <Button
-                                                variant="outline-secondary"
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        !showPassword
-                                                    )
-                                                }
-                                                style={styles.togglePasswordBtn}
-                                            >
-                                                {showPassword ? (
-                                                    <FaEyeSlash />
-                                                ) : (
-                                                    <FaEye />
-                                                )}
-                                            </Button>
-                                        </InputGroup>
-                                    </Form.Group>
-
-                                    <Form.Group controlId="formBasicCheckbox">
-                                        <Form.Check
-                                            type="checkbox"
-                                            label="Remember me"
-                                            checked={rememberMe}
-                                            onChange={(e) =>
-                                                setRememberMe(e.target.checked)
-                                            }
-                                            style={styles.checkbox}
-                                        />
-                                    </Form.Group>
-
+                                </InputGroup>
+                            </Form.Group>
+                            <Form.Group
+                                className="mb-3"
+                                controlId="formBasicPassword"
+                            >
+                                <Form.Label>Password</Form.Label>
+                                <InputGroup>
+                                    <InputGroup.Text>
+                                        <FaLock />
+                                    </InputGroup.Text>
+                                    <Form.Control
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
+                                        placeholder="Enter your password"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        required
+                                    />
                                     <Button
-                                        variant="success"
-                                        type="submit"
-                                        style={styles.button}
-                                        disabled={loading}
+                                        variant="outline-secondary"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
                                     >
-                                        {loading ? (
-                                            <motion.div
-                                                animate={{ rotate: 360 }}
-                                                transition={{
-                                                    repeat: Infinity,
-                                                    duration: 1,
-                                                    ease: "linear",
-                                                }}
-                                            >
-                                                <FaSpinner />
-                                            </motion.div>
+                                        {showPassword ? (
+                                            <FaEyeSlash />
                                         ) : (
-                                            "Log in"
+                                            <FaEye />
                                         )}
                                     </Button>
-                                </Form>
+                                </InputGroup>
+                            </Form.Group>
+                            <div className="d-flex justify-content-between mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    label="Remember me"
+                                    checked={rememberMe}
+                                    onChange={(e) =>
+                                        setRememberMe(e.target.checked)
+                                    }
+                                />
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-success"
+                                >
+                                    Forgot Password?
+                                </Link>
                             </div>
-                        </Col>
-                    </Row>
-                </Container>
-            </div>
-        </div>
+                            <Button
+                                variant="success"
+                                type="submit"
+                                className="w-100"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{
+                                            repeat: Infinity,
+                                            duration: 1,
+                                            ease: "linear",
+                                        }}
+                                    >
+                                        <FaSpinner />
+                                    </motion.div>
+                                ) : (
+                                    "Log In"
+                                )}
+                            </Button>
+                            <p className="text-center mt-3 text-muted">
+                                Don’t have an account?{" "}
+                                <Link
+                                    to="/signup"
+                                    className="text-success fw-bold"
+                                >
+                                    Create an account
+                                </Link>
+                            </p>
+                        </Form>
+                    </motion.div>
+                </Col>
+
+                {/* Right Side: Image and Content */}
+                <Col
+                    md={6}
+                    className="bg-success text-white d-none d-md-flex align-items-center justify-content-center"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="text-center p-5"
+                    >
+                        <img
+                            src={logo}
+                            alt="Dashboard illustration"
+                            className="img-fluid mb-3"
+                            style={{ maxWidth: "100px" }}
+                        />
+                        <h3 className="fw-bold">
+                            Provide proper management of coconut farms
+                        </h3>
+                        <p>
+                            Everything you need in an easily customizable
+                            dashboard.
+                        </p>
+                    </motion.div>
+                </Col>
+            </Row>
+        </Container>
     );
 };
 
@@ -200,87 +249,6 @@ const styles = {
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#f8f9fa",
-    },
-    card: {
-        padding: "2rem",
-        background: "white",
-        borderRadius: "15px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-        width: "100%",
-        maxWidth: "400px",
-        textAlign: "center",
-    },
-    logo: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: "1.5rem",
-        textDecoration: "none",
-        cursor: "pointer",
-        gap: "0.5rem",
-    },
-    logoIcon: {
-        fontSize: "2.5rem",
-        color: "#27ae60",
-        marginRight: "0.5rem",
-    },
-    title: {
-        fontSize: "2rem",
-        fontWeight: "bold",
-        color: "#2c3e50",
-    },
-    label: {
-        fontSize: "1rem",
-        fontWeight: "bold",
-        color: "#2c3e50",
-        textAlign: "left", // Align labels to the left
-        width: "100%",
-    },
-    input: {
-        borderRadius: "5px",
-        border: "1px solid #ced4da",
-        padding: "0.5rem",
-        fontSize: "1rem",
-    },
-    inputGroup: {
-        marginBottom: "1rem",
-    },
-    checkbox: {
-        fontSize: "1rem",
-        color: "#2c3e50",
-        marginTop: "1rem",
-        marginBottom: "1rem",
-    },
-    button: {
-        width: "100%",
-        padding: "0.75rem",
-        fontSize: "1rem",
-        borderRadius: "5px",
-        backgroundColor: "#27ae60",
-        borderColor: "#27ae60",
-    },
-    togglePasswordBtn: {
-        border: "none",
-        background: "transparent",
-        cursor: "pointer",
-    },
-    footer: {
-        backgroundColor: "#343a40",
-        color: "#fff",
-        padding: "2rem 0",
-        position: "relative",
-        bottom: 0,
-        width: "100%",
-        marginTop: "auto",
-    },
-    footerHeader: {
-        fontSize: "1.5rem",
-        fontWeight: "bold",
-        marginBottom: "1rem",
-    },
-    footerText: {
-        margin: 0,
-        fontSize: "1rem",
     },
 };
 
