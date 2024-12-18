@@ -15,6 +15,9 @@ return new class extends Migration {
         Schema::create('admins', function (Blueprint $table) {
             $table->id('admin_id');
             $table->string('name');
+            $table->integer('age');
+            $table->text('address');
+            $table->string('gender');
             $table->string('role');
             $table->foreignIdFor(User::class, 'user_id')->onDelete('cascade');
             $table->timestamps();
