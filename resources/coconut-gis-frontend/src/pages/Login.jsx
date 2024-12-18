@@ -44,6 +44,7 @@ const Login = () => {
 
             localStorage.setItem("token", response.accessToken);
             localStorage.setItem("admin", JSON.stringify(response.admin));
+
             window.location.href = "/dashboard";
         } catch (err) {
             toast.error("Invalid email or password");
