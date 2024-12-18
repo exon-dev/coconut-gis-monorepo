@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAdminStore } from "../../store/admin";
 import { motion } from "framer-motion";
 import { useBarangays } from "../../store/barangays";
@@ -22,10 +22,12 @@ import {
     Modal,
     Form,
 } from "react-bootstrap";
+import build from "../../utils/dev";
+import { useMarketUpdates } from "../../store/market";
+import { toast, Toaster } from "sonner";
 
 const Market = () => {
     const admin = useAdminStore((state) => state.admin);
-
     return (
         <Container style={styles.fullWidth}>
             <div style={styles.container}>
@@ -41,10 +43,10 @@ const Market = () => {
 };
 
 const AdminDashboard = () => {
+    const { updates, fetchMarketUpdates } = useMarketUpdates();
+
     const { barangays } = useBarangays((state) => state);
-    const [showPriceModal, setShowPriceModal] = useState(false);
-    const [showVolumeModal, setShowVolumeModal] = useState(false);
-    const [showTopMarketModal, setShowTopMarketModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
 
     const [prices, setPrices] = useState([{ kg: "", price: "" }]);
     const handlePriceChange = (index, field, value) => {
@@ -72,14 +74,64 @@ const AdminDashboard = () => {
         setBarangayVolumes(updatedVolumes);
     };
 
-    // For Top Market modal
     const [topMarket, setTopMarket] = useState({ name: "", description: "" });
     const handleTopMarketChange = (field, value) => {
         setTopMarket({ ...topMarket, [field]: value });
     };
 
+    const handleAddMarketUpdate = async () => {
+        const isPricesEmpty = prices.some(
+            (price) => price.kg === "" || price.price === ""
+        );
+        const isBarangayVolumesEmpty = barangayVolumes.some(
+            (volume) => volume.barangay === "" || volume.volume === ""
+        );
+        const isTopMarketEmpty =
+            topMarket.name === "" || topMarket.description === "";
+
+        if (isPricesEmpty || isBarangayVolumesEmpty || isTopMarketEmpty) {
+            toast.error(
+                "Please provide all the data for Price per coconut kg, Volume of coconut per barangay, and Top Market."
+            );
+            return;
+        }
+
+        try {
+            const processedPrices = JSON.stringify(prices);
+            const processedBarangayVolumes = JSON.stringify(barangayVolumes);
+            const processedTopMarket = JSON.stringify(topMarket);
+
+            const response = await fetch(build("market/add"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                    price_per_coconut_kg: processedPrices,
+                    volume_of_coconut: processedBarangayVolumes,
+                    top_market: processedTopMarket,
+                }),
+            });
+            if (!response.ok) {
+                console.error("An error occurred. Please try again.");
+                return;
+            }
+            toast.success("Market updated successfully.");
+            setShowUpdateModal(false);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        fetchMarketUpdates();
+        console.log(updates);
+    }, [fetchMarketUpdates]);
+
     return (
         <Container fluid className="p-0">
+            <Toaster richColors position="top-center" />
             <Row>
                 <Col md={2} className="bg-white vh-100 shadow-lg p-3">
                     <h4 className="text-success mb-4">
@@ -93,25 +145,9 @@ const AdminDashboard = () => {
                     <ul className="list-unstyled">
                         <button
                             className="btn btn-primary text-white py-2 text-success fw-bold"
-                            onClick={() => setShowPriceModal(true)}
+                            onClick={() => setShowUpdateModal(true)}
                         >
-                            Update Price per coconut (kg)
-                        </button>
-                    </ul>
-                    <ul className="list-unstyled">
-                        <button
-                            className="btn btn-success text-white py-2 text-success fw-bold"
-                            onClick={() => setShowVolumeModal(true)}
-                        >
-                            Update Volume of Coconut per brgy
-                        </button>
-                    </ul>
-                    <ul className="list-unstyled">
-                        <button
-                            className="btn btn-warning text-white py-2 text-success fw-bold"
-                            onClick={() => setShowTopMarketModal(true)}
-                        >
-                            Update Top Market
+                            Update Market
                         </button>
                     </ul>
                 </Col>
@@ -254,174 +290,181 @@ const AdminDashboard = () => {
                 </Col>
             </Row>
 
-            {/* Modals */}
+            {/* Single Update Modal */}
             <Modal
-                show={showPriceModal}
-                onHide={() => setShowPriceModal(false)}
+                show={showUpdateModal}
+                onHide={() => setShowUpdateModal(false)}
                 centered
+                size="lg" // Make modal large
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Update Price per Coconut (kg)</Modal.Title>
+                    <Modal.Title>Update Market Information</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {prices.map((price, index) => (
-                        <div key={index} className="mb-3">
-                            <Form.Group controlId={`kg-${index}`}>
-                                <Form.Label>Coconut kg</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={price.kg}
-                                    onChange={(e) =>
-                                        handlePriceChange(
-                                            index,
-                                            "kg",
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Enter kg"
-                                />
-                            </Form.Group>
-                            <Form.Group controlId={`price-${index}`}>
-                                <Form.Label>Price (₱)</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={price.price}
-                                    onChange={(e) =>
-                                        handlePriceChange(
-                                            index,
-                                            "price",
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Enter price"
-                                />
-                            </Form.Group>
-                            {index > 0 && (
-                                <Button
-                                    variant="danger"
-                                    onClick={() => handleRemovePrice(index)}
-                                >
-                                    Remove
-                                </Button>
-                            )}
-                        </div>
-                    ))}
+                    {/* Price per Coconut Input */}
+                    <h5 className="fw-bold">Price per Coconut (kg)</h5>
+                    <Row className="mb-3">
+                        {prices.map((price, index) => (
+                            <React.Fragment key={index}>
+                                {/* Coconut kg Input */}
+                                <Col md={5}>
+                                    <Form.Group controlId={`kg-${index}`}>
+                                        <Form.Label>Coconut kg</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={price.kg}
+                                            onChange={(e) =>
+                                                handlePriceChange(
+                                                    index,
+                                                    "kg",
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter kg"
+                                        />
+                                    </Form.Group>
+                                </Col>
+
+                                {/* Price (₱) Input */}
+                                <Col md={5}>
+                                    <Form.Group controlId={`price-${index}`}>
+                                        <Form.Label>Price (₱)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={price.price}
+                                            onChange={(e) =>
+                                                handlePriceChange(
+                                                    index,
+                                                    "price",
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter price"
+                                        />
+                                    </Form.Group>
+                                </Col>
+
+                                {/* Remove Button */}
+                                {index > 0 && (
+                                    <Col
+                                        md={2}
+                                        className="d-flex align-items-end"
+                                    >
+                                        <Button
+                                            variant="danger"
+                                            onClick={() =>
+                                                handleRemovePrice(index)
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Col>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </Row>
                     <Button variant="primary" onClick={handleAddPrice}>
                         <FaPlus /> Add More Prices
                     </Button>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowPriceModal(false)}
-                    >
-                        Close
-                    </Button>
-                    <Button variant="primary">Save Changes</Button>
-                </Modal.Footer>
-            </Modal>
 
-            <Modal
-                show={showVolumeModal}
-                onHide={() => setShowVolumeModal(false)}
-                centered
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        Update Volume of Coconut per Barangay
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {barangayVolumes.map((volume, index) => (
-                        <div key={index} className="mb-3">
-                            <Form.Group controlId={`barangay-${index}`}>
-                                <Form.Label>Barangay {index + 1}</Form.Label>
+                    {/* Volume of Coconut Input */}
+                    <h5 className="fw-bold mt-4">
+                        Volume of Coconut per Barangay
+                    </h5>
+                    <Row className="mb-3">
+                        {barangayVolumes.map((volume, index) => (
+                            <React.Fragment key={index}>
+                                {/* Barangay Name - Left side */}
+                                <Col md={6}>
+                                    <Form.Group controlId={`barangay-${index}`}>
+                                        <Form.Label>
+                                            Barangay {index + 1}
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={volume.barangay}
+                                            onChange={(e) =>
+                                                handleBarangayChange(
+                                                    index,
+                                                    "barangay",
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter Barangay Name"
+                                        />
+                                    </Form.Group>
+                                </Col>
+
+                                {/* Volume Input - Right side */}
+                                <Col md={6}>
+                                    <Form.Group controlId={`volume-${index}`}>
+                                        <Form.Label>Volume (kg)</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={volume.volume}
+                                            onChange={(e) =>
+                                                handleBarangayChange(
+                                                    index,
+                                                    "volume",
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter Volume"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </React.Fragment>
+                        ))}
+                    </Row>
+
+                    {/* Top Market Input */}
+                    <h5 className="fw-bold mt-4">Top Market</h5>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="topMarketName">
+                                <Form.Label>Market Name</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    value={volume.barangay}
+                                    value={topMarket.name}
                                     onChange={(e) =>
-                                        handleBarangayChange(
-                                            index,
-                                            "barangay",
+                                        handleTopMarketChange(
+                                            "name",
                                             e.target.value
                                         )
                                     }
-                                    placeholder="Enter Barangay Name"
+                                    placeholder="Enter Market Name"
                                 />
                             </Form.Group>
-                            <Form.Group controlId={`volume-${index}`}>
-                                <Form.Label>Volume (kg)</Form.Label>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="topMarketDescription">
+                                <Form.Label>Description</Form.Label>
                                 <Form.Control
-                                    type="number"
-                                    value={volume.volume}
+                                    as="textarea"
+                                    rows={3}
+                                    value={topMarket.description}
                                     onChange={(e) =>
-                                        handleBarangayChange(
-                                            index,
-                                            "volume",
+                                        handleTopMarketChange(
+                                            "description",
                                             e.target.value
                                         )
                                     }
-                                    placeholder="Enter Volume"
+                                    placeholder="Enter Description"
                                 />
                             </Form.Group>
-                        </div>
-                    ))}
+                        </Col>
+                    </Row>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
                         variant="secondary"
-                        onClick={() => setShowVolumeModal(false)}
+                        onClick={() => setShowUpdateModal(false)}
                     >
                         Close
                     </Button>
-                    <Button variant="primary">Save Changes</Button>
-                </Modal.Footer>
-            </Modal>
-
-            <Modal
-                show={showTopMarketModal}
-                onHide={() => setShowTopMarketModal(false)}
-                centered
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Update Top Market</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form.Group controlId="topMarketName">
-                        <Form.Label>Market Name</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={topMarket.name}
-                            onChange={(e) =>
-                                handleTopMarketChange("name", e.target.value)
-                            }
-                            placeholder="Enter Market Name"
-                        />
-                    </Form.Group>
-                    <Form.Group controlId="topMarketDescription">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={3}
-                            value={topMarket.description}
-                            onChange={(e) =>
-                                handleTopMarketChange(
-                                    "description",
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Enter Description"
-                        />
-                    </Form.Group>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowTopMarketModal(false)}
-                    >
-                        Close
+                    <Button onClick={handleAddMarketUpdate} variant="primary">
+                        Save Changes
                     </Button>
-                    <Button variant="primary">Save Changes</Button>
                 </Modal.Footer>
             </Modal>
         </Container>
