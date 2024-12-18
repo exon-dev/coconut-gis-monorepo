@@ -13,61 +13,6 @@ use App\Models\Admin;
 
 class AdminController extends Controller
 {
-    //
-    public function create_admin(Request $request)
-    {
-        $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'string|max:255|unique',
-            'password' => 'string|max:11',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-        $admin = Admin::where('admin_id', $user->id)->first();
-
-        if ($user || $admin) {
-            return response()->json(
-                [
-                    'message' => 'Email already exists',
-                ],
-                400
-            );
-        }
-
-        $user = new User();
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        if ($user) {
-            $token = null;
-            if ($user->save()) {
-                $token = $user->createToken('personal access token');
-            }
-
-            $admin = new Admin();
-            $admin->name = $request->name;
-            $admin->role = 'admin';
-            $admin->user_id = $user->id;
-            $admin->save();
-
-            return response()->json(
-                [
-                    'message' => 'Admin created successfully',
-                    'token' => $token->plainTextToken,
-                ],
-                200
-            );
-        } else {
-            return response()->json(
-                [
-                    'message' => 'Failed to create admin. Please try again',
-                ],
-                400
-            );
-        }
-    }
-
     public function get_admins()
     {
         $admins = Admin::all();

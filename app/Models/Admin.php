@@ -14,7 +14,14 @@ class Admin extends Model
     use HasFactory, HasApiTokens;
 
     protected $primaryKey = 'admin_id';
-    protected $fillable = ['name', 'role', 'user_id'];
+    protected $fillable = [
+        'name',
+        'age',
+        'address',
+        'gender',
+        'role',
+        'user_id',
+    ];
 
     public function user()
     {

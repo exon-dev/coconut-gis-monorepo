@@ -50,33 +50,74 @@ class AuthController extends Controller
     public function signup(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string',
+            'first_name' => 'string|max:255',
+            'last_name' => 'string|max:255',
+            'middle_initial' => 'string|max:255',
+            'age' => 'integer|required',
+            'gender' => 'string|max:255',
+            'address' => 'string|max:255',
+            'email' => 'string|max:255|unique:users',
+            'password' => 'string|max:11',
+            'role' => 'string|max:255',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = User::where('email', $request->email)->first();
 
+        if ($user) {
+            return response()->json(
+                [
+                    'message' => 'Email already exists',
+                ],
+                400
+            );
+        }
+
+        $user = new User();
+        $user->name =
+            $request->first_name .
+            ' ' .
+            $request->middle_initial .
+            ' ' .
+            $request->last_name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
         $user->save();
 
-        $admin = new Admin([
-            'name' => $request->name,
-            'role' => 'admin',
-            'user_id' => $user->user_id,
-        ]);
+        if ($user) {
+            $token = null;
+            if ($user->save()) {
+                $token = $user->createToken('personal access token');
+            }
 
-        $admin->save();
+            $admin = new Admin();
+            $admin->name =
+                $request->first_name .
+                ' ' .
+                $request->middle_initial .
+                ' ' .
+                $request->last_name;
+            $admin->age = $request->age;
+            $admin->address = $request->address;
+            $admin->gender = $request->gender;
+            $admin->role = $request->role;
+            $admin->user_id = $user->user_id;
+            $admin->save();
 
-        return response()->json(
-            [
-                'message' => 'Successfully created admin!',
-            ],
-            201
-        );
+            return response()->json(
+                [
+                    'message' => 'Admin created successfully',
+                    'token' => $token->plainTextToken,
+                ],
+                200
+            );
+        } else {
+            return response()->json(
+                [
+                    'message' => 'Failed to create admin. Please try again',
+                ],
+                400
+            );
+        }
     }
 
     public function logout(Request $request)
