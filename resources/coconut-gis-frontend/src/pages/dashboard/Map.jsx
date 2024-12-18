@@ -9,7 +9,6 @@ import { fromLonLat } from "ol/proj";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
 import Polygon from "ol/geom/Polygon";
 import Style from "ol/style/Style";
 import Draw from "ol/interaction/Draw";
@@ -22,9 +21,12 @@ import { click } from "ol/events/condition";
 import { toast, Toaster } from "sonner";
 import { useBarangays } from "../../store/barangays";
 import build from "../../utils/dev";
+import { useAdminStore } from "../../store/admin";
+import { Row, Col, Badge } from "react-bootstrap";
 
 const MapComponent = () => {
-    const { barangays } = useBarangays();
+    const admin = useAdminStore((state) => state.admin);
+    const { barangays, fetchBarangays } = useBarangays();
     const mapTargetElement = useRef(null);
     const popoverRef = useRef(null);
 
@@ -40,13 +42,26 @@ const MapComponent = () => {
     const [popoverContent, setPopoverContent] = useState(null);
 
     const [selectedBarangay, setSelectedBarangay] = useState("");
+    const [detailsOfSelectedBarangay, setDetailsOfSelectedBarangay] = useState(
+        {}
+    );
     const [isConfigMinimized, setIsConfigMinimized] = useState(false);
     const [affectedPlots, setAffectedPlots] = useState([]);
     const [unaffectedPlots, setUnaffectedPlots] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [farmers, setFarmers] = useState([]);
-    const [selectedFarmer, setSelectedFarmer] = useState({});
+    const [filteredFarmers, setFilteredFarmers] = useState([]);
+    const [selectedAffected, setSelectedAffected] = useState([]);
+    const [selectedUnaffected, setSelectedUnaffected] = useState([]);
+    const [
+        selectedAffectedLandsPerBarangay,
+        setSelectedAffectedLandsPerBarangay,
+    ] = useState([]);
+    const [
+        selectedUnaffectedLandsPerBarangay,
+        setSelectedUnaffectedLandsPerBarangay,
+    ] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -151,8 +166,6 @@ const MapComponent = () => {
                         coordinates = coordinates[0];
                     }
 
-                    console.log(coordinates);
-
                     const polygon = new Polygon([coordinates]);
                     const feature = new Feature({
                         geometry: polygon,
@@ -217,10 +230,10 @@ const MapComponent = () => {
 
         unaffectedPlots.forEach((plot) => {
             const polygon = new Polygon(plot);
-            const feature = new Feature({
+            const featureOne = new Feature({
                 geometry: polygon,
             });
-            feature.setStyle(
+            featureOne.setStyle(
                 new Style({
                     fill: new Fill({
                         color: "rgba(0, 255, 0, 0.5)",
@@ -231,15 +244,15 @@ const MapComponent = () => {
                     }),
                 })
             );
-            vectorSource.addFeature(feature);
+            vectorSource.addFeature(featureOne);
         });
 
         affectedPlots.forEach((plot) => {
             const polygon = new Polygon(plot);
-            const feature = new Feature({
+            const featureTwo = new Feature({
                 geometry: polygon,
             });
-            feature.setStyle(
+            featureTwo.setStyle(
                 new Style({
                     fill: new Fill({
                         color: "rgba(255, 0, 0, 0.5)",
@@ -250,13 +263,18 @@ const MapComponent = () => {
                     }),
                 })
             );
-            vectorSource.addFeature(feature);
+            vectorSource.addFeature(featureTwo);
         });
     }, [unaffectedPlots, affectedPlots, vectorSource]);
 
     const handleBarangayChange = (e) => {
         const selectedName = e.target.value;
         setSelectedBarangay(selectedName);
+
+        const selectedBarangay = barangays.find(
+            (barangay) => barangay.barangay_name === selectedName
+        );
+
         const selectedBarangayIndex = barangays.findIndex(
             (barangay) => barangay.barangay_name === selectedName
         );
@@ -268,9 +286,9 @@ const MapComponent = () => {
             barangay_id: barangays[selectedBarangayIndex].barangay_id,
         });
 
-        const selectedBarangay = barangays.find(
-            (barangay) => barangay.barangay_name === selectedName
-        );
+        setDetailsOfSelectedBarangay(barangays[selectedBarangayIndex]);
+
+        console.log("details", detailsOfSelectedBarangay);
 
         if (selectedBarangay) {
             const coords = fromLonLat([
@@ -282,6 +300,29 @@ const MapComponent = () => {
                 duration: 1000,
                 zoom: 17,
             });
+
+            console.log(barangays);
+
+            if (selectedBarangay.lands.length > 0) {
+                const affected = selectedBarangay.lands.filter(
+                    (land) => land.is_affected
+                );
+                const unaffected = selectedBarangay.lands.filter(
+                    (land) => !land.is_affected
+                );
+
+                // Parse land_location for affected and unaffected lands
+                const affectedLocations = affected.map((land) =>
+                    JSON.parse(land.land_location)
+                );
+                const unaffectedLocations = unaffected.map((land) =>
+                    JSON.parse(land.land_location)
+                );
+                setSelectedAffectedLandsPerBarangay(affectedLocations);
+                setSelectedUnaffectedLandsPerBarangay(unaffectedLocations);
+
+                console.log(affectedLocations, unaffectedLocations);
+            }
         }
     };
 
@@ -321,24 +362,6 @@ const MapComponent = () => {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 const data = await response.json();
 
-                const uniqueAffectedPlots = affectedPlots.filter(
-                    (plot) =>
-                        !unaffectedPlots.some(
-                            (unaffectedPlot) =>
-                                JSON.stringify(unaffectedPlot) ===
-                                JSON.stringify(plot)
-                        )
-                );
-
-                const uniqueUnaffectedPlots = unaffectedPlots.filter(
-                    (plot) =>
-                        !affectedPlots.some(
-                            (affectedPlot) =>
-                                JSON.stringify(affectedPlot) ===
-                                JSON.stringify(plot)
-                        )
-                );
-
                 const responseAffected = await fetch(build("land/create"), {
                     method: "POST",
                     headers: {
@@ -349,15 +372,13 @@ const MapComponent = () => {
                     },
                     body: JSON.stringify({
                         is_affected: true,
-                        land_location: JSON.stringify(
-                            uniqueAffectedPlots.flatMap(([x, y]) => [y, x])
-                        ),
+                        land_location: JSON.stringify(affectedPlots),
                         farmer_id: data.farmer_id,
                         barangay_id: details.barangay_id,
                     }),
-                }).then((res) => res.json());
+                });
 
-                if (responseAffected.status !== 201) {
+                if (!responseAffected.ok) {
                     throw new Error("Error saving affected land.");
                 }
 
@@ -371,20 +392,19 @@ const MapComponent = () => {
                     },
                     body: JSON.stringify({
                         is_affected: false,
-                        land_location: JSON.stringify(
-                            uniqueUnaffectedPlots.flatMap(([x, y]) => [y, x])
-                        ),
+                        land_location: JSON.stringify(unaffectedPlots),
                         farmer_id: data.farmer_id,
                         barangay_id: details.barangay_id,
                     }),
-                }).then((res) => res.json());
+                });
 
-                if (responseUnaffected.status !== 201) {
+                if (!responseUnaffected.ok) {
                     throw new Error("Error saving unaffected land.");
                 }
 
                 toast.success("Farmer successfully saved!");
                 fetchFarmers("");
+                fetchBarangays();
             } else {
                 const text = await response.text();
                 console.error("Response is not JSON:", text);
@@ -447,6 +467,7 @@ const MapComponent = () => {
             });
             const data = await response.json();
             setFarmers(data);
+            setFilteredFarmers(data);
         } catch (error) {
             console.error("Error fetching farmers:", error);
         }
@@ -455,52 +476,130 @@ const MapComponent = () => {
     const handleSearchChange = (e) => {
         const query = e.target.value;
         setSearchTerm(query);
-        setShowDropdown(true);
-        fetchFarmers(query);
+
+        const filtered = farmers.filter((farmer) =>
+            farmer.name.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredFarmers(filtered);
+
+        setShowDropdown(query !== "" && filtered.length > 0);
     };
 
     const handleFarmerSelect = (farmer) => {
         setSearchTerm(farmer.name);
         setShowDropdown(false);
-        setSelectedFarmer(farmer);
+
+        if (selectedAffected.length > 0 || selectedUnaffected.length > 0) {
+            setSelectedAffected([]);
+            setSelectedUnaffected([]);
+        }
 
         setDetails({
-            name: selectedFarmer.name,
-            gender: selectedFarmer.gender,
-            barangay_id: selectedFarmer.barangay.barangay_id,
-            number_of_coconut_trees: selectedFarmer.number_of_coconut_trees,
+            name: farmer.name,
+            gender: farmer.gender,
+            barangay_id: farmer.barangay.barangay_id,
+            number_of_coconut_trees: farmer.number_of_coconut_trees,
         });
 
-        setSelectedBarangay(selectedFarmer.barangay.barangay_name);
+        setSelectedBarangay(farmer.barangay.barangay_name);
 
         const coords = fromLonLat([
-            parseFloat(selectedFarmer.barangay.x_coordinate),
-            parseFloat(selectedFarmer.barangay.y_coordinate),
+            parseFloat(farmer.barangay.x_coordinate),
+            parseFloat(farmer.barangay.y_coordinate),
         ]);
+
         map.getView().animate({
             center: coords,
             duration: 1000,
             zoom: 17,
         });
 
-        selectedFarmer.lands.forEach((land) => {
+        farmer.lands.forEach((land) => {
             if (land.is_affected) {
-                let coordinates = JSON.parse(land.land_location);
+                setSelectedAffected(JSON.parse(land.land_location));
+            } else {
+                setSelectedUnaffected(JSON.parse(land.land_location));
+            }
+        });
+    };
 
-                if (
-                    coordinates.length === 1 &&
-                    Array.isArray(coordinates[0][0])
-                ) {
-                    coordinates = coordinates[0];
-                }
+    useEffect(() => {
+        vectorSource.clear();
 
-                console.log(coordinates);
+        selectedUnaffected.forEach((plot) => {
+            const polygon = new Polygon(plot);
+            const featureTwo = new Feature({
+                geometry: polygon,
+            });
 
-                const polygon = new Polygon([coordinates]);
-                const feature = new Feature({
+            featureTwo.setStyle(
+                new Style({
+                    fill: new Fill({
+                        color: "rgba(0, 255, 0, 0.3)",
+                    }),
+                    stroke: new Stroke({
+                        color: "#00ff00",
+                        width: 2,
+                    }),
+                })
+            );
+            vectorSource.addFeature(featureTwo);
+        });
+
+        selectedAffected.forEach((plot) => {
+            const polygon = new Polygon(plot);
+            const featureOne = new Feature({
+                geometry: polygon,
+            });
+
+            featureOne.setStyle(
+                new Style({
+                    fill: new Fill({
+                        color: "rgba(255, 0, 0, 0.5)",
+                    }),
+                    stroke: new Stroke({
+                        color: "#ff0000",
+                        width: 2,
+                    }),
+                })
+            );
+            vectorSource.addFeature(featureOne);
+        });
+    }, [selectedAffected, selectedUnaffected, vectorSource]);
+
+    useEffect(() => {
+        vectorSource.clear();
+
+        selectedUnaffectedLandsPerBarangay.forEach((unaffected) => {
+            unaffected.forEach((plot) => {
+                const polygon = new Polygon(plot);
+                const featureOne = new Feature({
                     geometry: polygon,
                 });
-                feature.setStyle(
+
+                featureOne.setStyle(
+                    new Style({
+                        fill: new Fill({
+                            color: "rgba(0, 255, 0, 0.3)",
+                        }),
+                        stroke: new Stroke({
+                            color: "#00ff00",
+                            width: 2,
+                        }),
+                    })
+                );
+                vectorSource.addFeature(featureOne);
+            });
+        });
+
+        selectedAffectedLandsPerBarangay.forEach((affected) => {
+            affected.forEach((plot) => {
+                const polygon = new Polygon(plot);
+                const featureTwo = new Feature({
+                    geometry: polygon,
+                });
+
+                featureTwo.setStyle(
                     new Style({
                         fill: new Fill({
                             color: "rgba(255, 0, 0, 0.5)",
@@ -511,39 +610,18 @@ const MapComponent = () => {
                         }),
                     })
                 );
-                vectorSource.addFeature(feature);
-            } else {
-                let coordinates = JSON.parse(land.land_location);
-
-                if (
-                    coordinates.length === 1 &&
-                    Array.isArray(coordinates[0][0])
-                ) {
-                    coordinates = coordinates[0];
-                }
-
-                console.log(coordinates);
-
-                const polygon = new Polygon([coordinates]);
-                const feature = new Feature({
-                    geometry: polygon,
-                });
-                feature.setStyle(
-                    new Style({
-                        fill: new Fill({
-                            color: "rgba(0, 255, 0, 0.5)",
-                        }),
-                        stroke: new Stroke({
-                            color: "#00ff00",
-                            width: 2,
-                        }),
-                    })
-                );
-                vectorSource.addFeature(feature);
-            }
+                vectorSource.addFeature(featureTwo);
+            });
         });
-    };
+    }, [
+        selectedAffectedLandsPerBarangay,
+        selectedUnaffectedLandsPerBarangay,
+        vectorSource,
+    ]);
 
+    useEffect(() => {
+        fetchFarmers();
+    }, []);
     return (
         <div
             id="map"
@@ -584,12 +662,15 @@ const MapComponent = () => {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Search"
+                                placeholder="Search Farmer"
                                 value={searchTerm}
                                 onChange={handleSearchChange}
-                                onFocus={() => setShowDropdown(true)}
+                                onFocus={() => {
+                                    setShowDropdown(true);
+                                }}
                             />
-                            {showDropdown && farmers.length > 0 && (
+                            {/* Dropdown */}
+                            {showDropdown && filteredFarmers.length > 0 && (
                                 <ul
                                     className="dropdown-menu show"
                                     style={{
@@ -602,7 +683,7 @@ const MapComponent = () => {
                                         overflowY: "auto",
                                     }}
                                 >
-                                    {farmers.map((farmer) => (
+                                    {filteredFarmers.map((farmer) => (
                                         <li
                                             key={farmer.id}
                                             className="dropdown-item"
@@ -614,6 +695,23 @@ const MapComponent = () => {
                                         </li>
                                     ))}
                                 </ul>
+                            )}
+
+                            {/* Message when no results found */}
+                            {showDropdown && filteredFarmers.length === 0 && (
+                                <div
+                                    className="dropdown-menu show"
+                                    style={{
+                                        position: "absolute",
+                                        top: "100%",
+                                        left: 0,
+                                        right: 0,
+                                    }}
+                                >
+                                    <p className="dropdown-item text-muted">
+                                        No farmers found
+                                    </p>
+                                </div>
                             )}
                         </div>
                         <div className="mb-3">
@@ -643,6 +741,51 @@ const MapComponent = () => {
                         </div>
                         {selectedBarangay && (
                             <>
+                                <Col className="gap-3 my-4 border-top border-bottom py-3">
+                                    <Col
+                                        sm={6}
+                                        md={4}
+                                        className="d-flex align-items-center justify-items-center"
+                                    >
+                                        <div className="d-flex flex-row gap-4 justify-items-center">
+                                            <p className="mb-1 text-muted text-truncate">
+                                                Total Farmers
+                                            </p>
+                                            <div className="d-flex align-items-center">
+                                                <Badge
+                                                    bg="primary"
+                                                    className="me-2"
+                                                >
+                                                    {
+                                                        detailsOfSelectedBarangay.farmers_count
+                                                    }
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </Col>
+
+                                    <Col
+                                        sm={6}
+                                        md={4}
+                                        className="d-flex align-items-center"
+                                    >
+                                        <div className="d-flex flex-row gap-4 justify-items-center">
+                                            <p className="mb-1 text-muted text-truncate">
+                                                Total Coconut Trees Planted
+                                            </p>
+                                            <div className="d-flex align-items-center">
+                                                <Badge
+                                                    bg="success"
+                                                    className="me-2"
+                                                >
+                                                    {
+                                                        detailsOfSelectedBarangay.coconut_trees_planted
+                                                    }
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </Col>
+                                </Col>
                                 <div className="mb-3">
                                     <label className="form-label">
                                         Full name (Last Name, First Name)
@@ -705,62 +848,96 @@ const MapComponent = () => {
                                         }}
                                     />
                                 </div>
-                                <div className="mb-3">
-                                    <label className="form-label">
-                                        Plot Areas that has been un/affected by
-                                        Pest Infestation
-                                    </label>
-                                    <div className="d-flex gap-2">
-                                        <button
-                                            onClick={() => {
-                                                toast.success(
-                                                    "Unaffected Plot Active. Please plot now!"
-                                                );
-                                                addInteraction(
-                                                    "rgba(0, 255, 0, 0.5)",
-                                                    setUnaffectedPlots
-                                                );
-                                            }}
-                                            className="btn btn-success"
-                                        >
-                                            Unaffected
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                toast.error(
-                                                    "Affected Plot Active. Please plot now!"
-                                                );
-                                                addInteraction(
-                                                    "rgba(255, 0, 0, 0.5)",
-                                                    setAffectedPlots
-                                                );
-                                            }}
-                                            className="btn btn-danger"
-                                        >
-                                            Affected
-                                        </button>
+                                {admin.role === "admin" ? (
+                                    <div className="mb-3">
+                                        <label className="form-label">
+                                            Plot Areas that has been un/affected
+                                            by Pest Infestation
+                                        </label>
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    toast.success(
+                                                        "Unaffected Plot Active. Please plot now!"
+                                                    );
+                                                    addInteraction(
+                                                        "rgba(0, 255, 0, 0.5)",
+                                                        setUnaffectedPlots
+                                                    );
+                                                }}
+                                                className="btn btn-success"
+                                            >
+                                                Unaffected
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    toast.error(
+                                                        "Affected Plot Active. Please plot now!"
+                                                    );
+                                                    addInteraction(
+                                                        "rgba(255, 0, 0, 0.5)",
+                                                        setAffectedPlots
+                                                    );
+                                                }}
+                                                className="btn btn-danger"
+                                            >
+                                                Affected
+                                            </button>
+                                        </div>
+                                        <div className="d-flex gap-2 mt-2">
+                                            <button
+                                                onClick={() => {
+                                                    setAffectedPlots([]);
+                                                    setUnaffectedPlots([]);
+                                                    toast.success(
+                                                        "All plots reset"
+                                                    );
+                                                }}
+                                                className="btn btn-primary"
+                                            >
+                                                Reset All Plots
+                                            </button>
+                                            <button
+                                                onClick={handleSaveNewFarmer}
+                                                className="btn btn-warning"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="d-flex gap-2 mt-2">
-                                        <button
-                                            onClick={() => {
-                                                setAffectedPlots([]);
-                                                setUnaffectedPlots([]);
-                                                toast.success(
-                                                    "All plots reset"
-                                                );
-                                            }}
-                                            className="btn btn-primary"
-                                        >
-                                            Reset All Plots
-                                        </button>
-                                        <button
-                                            onClick={handleSaveNewFarmer}
-                                            className="btn btn-warning"
-                                        >
-                                            Save
-                                        </button>
+                                ) : (
+                                    <div className="mt-2">
+                                        <Row className="gap-2">
+                                            <Col className="d-flex align-items-center">
+                                                <div
+                                                    style={{
+                                                        width: "1rem",
+                                                        height: "1rem",
+                                                        backgroundColor: "red",
+                                                        borderRadius: "50%",
+                                                    }}
+                                                ></div>
+                                                <p className="mb-0 ms-2">
+                                                    Affected
+                                                </p>
+                                            </Col>
+                                            <Col className="d-flex align-items-center">
+                                                <div
+                                                    style={{
+                                                        width: "1rem",
+                                                        height: "1rem",
+                                                        backgroundColor:
+                                                            "green",
+                                                        borderRadius: "50%",
+                                                    }}
+                                                ></div>
+                                                <p className="mb-0 ms-2">
+                                                    Unaffected
+                                                </p>
+                                            </Col>
+                                        </Row>
                                     </div>
-                                </div>
+                                )}
                             </>
                         )}
                     </>

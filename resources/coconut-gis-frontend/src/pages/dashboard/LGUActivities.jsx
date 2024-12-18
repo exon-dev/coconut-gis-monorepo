@@ -144,15 +144,13 @@ const LGUActivities = () => {
                 >
                     <div style={styles.cardHeader}>
                         <FaBullhorn size={24} style={styles.icon} />
-                        <h3>Announcements</h3>
+                        <h3>Programs</h3>
                     </div>
                     <div style={styles.feedContent}>
                         {/* Render announcements from the database here */}
-                        <p>Announcement 1: Lorem ipsum dolor sit amet.</p>
-                        <p>Announcement 2: Consectetur adipiscing elit.</p>
-                        <p>
-                            Announcement 3: Integer nec odio. Praesent libero.
-                        </p>
+                        <p>Program 1: Lorem ipsum dolor sit amet.</p>
+                        <p>Program 2: Consectetur adipiscing elit.</p>
+                        <p>Program 3: Integer nec odio. Praesent libero.</p>
                     </div>
                 </motion.div>
                 <motion.div

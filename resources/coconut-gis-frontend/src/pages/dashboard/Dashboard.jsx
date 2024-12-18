@@ -12,8 +12,10 @@ import { useBarangays } from "../../store/barangays";
 import { Modal, Button } from "react-bootstrap";
 import build from "../../utils/dev";
 import { toast, Toaster } from "sonner";
+import { useAdminStore } from "../../store/admin";
 
 const Dashboard = () => {
+    const { admin } = useAdminStore();
     const { fetchBarangays, barangays } = useBarangays();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortOption, setSortOption] = useState("barangay_id");
@@ -127,7 +129,9 @@ const Dashboard = () => {
                                 <th>Barangay ID</th>
                                 <th>Barangay</th>
                                 <th>Number of Farmers</th>
-                                <th>Action</th>
+                                <th>Number of Lands</th>
+                                <th>Total Coconut Trees Planted</th>
+                                {admin?.role === "admin" && <th>Action</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -136,17 +140,23 @@ const Dashboard = () => {
                                     <td>{barangay.barangay_id}</td>
                                     <td>{barangay.barangay_name}</td>
                                     <td>{barangay.farmers_count}</td>
-                                    <td>
-                                        <button
-                                            style={styles.actionButton}
-                                            onClick={() =>
-                                                handleViewClick(barangay)
-                                            }
-                                        >
-                                            <FaEye style={styles.actionIcon} />{" "}
-                                            View
-                                        </button>
-                                    </td>
+                                    <td>{barangay.lands_count}</td>
+                                    <td>{barangay.coconut_trees_planted}</td>
+                                    {admin?.role === "admin" && (
+                                        <td>
+                                            <button
+                                                style={styles.actionButton}
+                                                onClick={() =>
+                                                    handleViewClick(barangay)
+                                                }
+                                            >
+                                                <FaEye
+                                                    style={styles.actionIcon}
+                                                />{" "}
+                                                View
+                                            </button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -155,12 +165,14 @@ const Dashboard = () => {
             </div>
 
             <Modal show={showModal} onHide={handleCloseModal} centered>
+                {/* Check if the user is an admin */}
                 <Modal.Header closeButton>
                     <Modal.Title>
                         Farmers in {selectedBarangay?.barangay_name}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {/* Check if farmers exist */}
                     {farmers?.length !== 0 ? (
                         <div style={styles.modalTableContainer}>
                             <table style={styles.modalTable}>
@@ -189,6 +201,7 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {/* Loop through farmers */}
                                     {farmers.map((farmer) => (
                                         <tr key={farmer.id}>
                                             <td>{farmer.farmer_id}</td>
@@ -206,6 +219,8 @@ const Dashboard = () => {
                         <p>No farmers found in this barangay.</p>
                     )}
                 </Modal.Body>
+
+                {/* Modal Footer */}
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>
                         Close

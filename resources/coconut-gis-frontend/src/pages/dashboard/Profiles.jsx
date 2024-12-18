@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaUserPlus, FaSync, FaSort } from "react-icons/fa";
-import { motion } from "framer-motion";
 import { Modal, Button, Pagination } from "react-bootstrap";
 import build from "../../utils/dev";
 import { toast, Toaster } from "sonner";
