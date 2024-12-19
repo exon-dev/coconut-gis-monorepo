@@ -9,6 +9,7 @@ const Profiles = () => {
     const [sortOption, setSortOption] = useState("name");
     const [currentPage, setCurrentPage] = useState(1);
     const [profiles, setProfiles] = useState([]);
+    const [filteredProfiles, setFilteredProfiles] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
 
@@ -18,6 +19,18 @@ const Profiles = () => {
     useEffect(() => {
         fetchProfiles();
     }, [currentPage, sortOption]);
+
+    useEffect(() => {
+        // Filter profiles based on search term
+        if (searchTerm) {
+            const filtered = profiles.filter((profile) =>
+                profile.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredProfiles(filtered);
+        } else {
+            setFilteredProfiles(profiles);
+        }
+    }, [searchTerm, profiles]);
 
     const fetchProfiles = async () => {
         try {
@@ -32,9 +45,7 @@ const Profiles = () => {
                         )}`,
                     },
                 }
-            ).then((res) => {
-                return res.json();
-            });
+            ).then((res) => res.json());
 
             if (response.message === "No farmers found") {
                 toast.error(response.message);
@@ -115,7 +126,7 @@ const Profiles = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {profiles?.map((profile) => (
+                            {filteredProfiles?.map((profile) => (
                                 <tr key={profile.farmer_id}>
                                     <td>{profile.farmer_id}</td>
                                     <td>{profile.name}</td>

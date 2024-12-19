@@ -28,6 +28,7 @@ import { toast, Toaster } from "sonner";
 
 const Market = () => {
     const admin = useAdminStore((state) => state.admin);
+
     return (
         <Container style={styles.fullWidth}>
             <div style={styles.container}>
@@ -118,6 +119,14 @@ const AdminDashboard = () => {
                 return;
             }
             toast.success("Market updated successfully.");
+            setPrices([]);
+            setBarangayVolumes(
+                barangays.map((barangay) => ({
+                    barangay: barangay.barangay_name,
+                    volume: "",
+                }))
+            );
+            setTopMarket({ name: "", description: "" });
             setShowUpdateModal(false);
         } catch (err) {
             console.error(err);
@@ -126,22 +135,17 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchMarketUpdates();
-        console.log(updates);
     }, [fetchMarketUpdates]);
 
     return (
-        <Container fluid className="p-0">
+        <Container fluid className="p-0" styles={styles.page}>
             <Toaster richColors position="top-center" />
             <Row>
                 <Col md={2} className="bg-white vh-100 shadow-lg p-3">
                     <h4 className="text-success mb-4">
                         MAO Coconut Information Systems
                     </h4>
-                    <ul className="list-unstyled">
-                        <li className="py-2 text-success fw-bold">
-                            Market Update
-                        </li>
-                    </ul>
+
                     <ul className="list-unstyled">
                         <button
                             className="btn btn-primary text-white py-2 text-success fw-bold"
@@ -154,12 +158,12 @@ const AdminDashboard = () => {
 
                 {/* Main Dashboard */}
                 <Col md={10} className="p-4">
-                    <h3 className="mb-4 fw-bold">Admin Dashboard</h3>
-                    <Row>
+                    <h3 className="mb-4 fw-bold">Set Trade & Market</h3>
+                    <Row className="g-4">
                         {/* Cards */}
                         <Col md={3}>
                             <motion.div whileHover={{ scale: 1.05 }}>
-                                <Card className="shadow-lg p-3 text-center border-1 bg-white">
+                                <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
                                     <FaUsers
                                         size={30}
                                         className="text-success"
@@ -175,7 +179,7 @@ const AdminDashboard = () => {
                         </Col>
                         <Col md={3}>
                             <motion.div whileHover={{ scale: 1.05 }}>
-                                <Card className="shadow-lg p-3 text-center border-1 bg-white">
+                                <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
                                     <GiCoconuts
                                         size={30}
                                         className="text-success"
@@ -191,7 +195,7 @@ const AdminDashboard = () => {
                         </Col>
                         <Col md={3}>
                             <motion.div whileHover={{ scale: 1.05 }}>
-                                <Card className="shadow-lg p-3 text-center border-1 bg-white">
+                                <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
                                     <FaThumbsUp
                                         size={30}
                                         className="text-success"
@@ -205,7 +209,7 @@ const AdminDashboard = () => {
                         </Col>
                         <Col md={3}>
                             <motion.div whileHover={{ scale: 1.05 }}>
-                                <Card className="shadow-lg p-3 text-center border-1 bg-white">
+                                <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
                                     <FaClock
                                         size={30}
                                         className="text-success"
@@ -471,87 +475,124 @@ const AdminDashboard = () => {
     );
 };
 
-const UserMarketView = () => (
-    <Container fluid className="p-4" style={{ backgroundColor: "#f8f9fa" }}>
-        <Row>
-            {/* Sidebar */}
-            <Col md={3} className="bg-white shadow-lg p-3 rounded">
-                <h5 className="fw-bold mb-4 text-success">Market Overview</h5>
-                <ListGroup variant="flush">
-                    <ListGroup.Item className="text-muted">Home</ListGroup.Item>
-                    <ListGroup.Item className="text-muted">
-                        Reports
-                    </ListGroup.Item>
-                    <ListGroup.Item className="text-success fw-bold">
-                        Price Updates
-                    </ListGroup.Item>
-                    <ListGroup.Item className="text-muted">
-                        Settings
-                    </ListGroup.Item>
-                    <ListGroup.Item className="text-muted">
-                        Logout
-                    </ListGroup.Item>
-                </ListGroup>
-            </Col>
+const UserMarketView = () => {
+    const { updates, fetchMarketUpdates } = useMarketUpdates();
 
-            {/* Feed Section */}
-            <Col md={6}>
-                <Card className="p-3 mb-4 shadow-lg border-1">
-                    <h5 className="fw-bold mb-3">Price of Coconut (per kg)</h5>
-                    <div className="text-center">
-                        <FaWeight size={50} className="text-success mb-2" />
-                        <p className="fs-4 fw-bold text-success">₱45.00</p>
-                        <small className="text-muted">Updated: June 2024</small>
-                    </div>
-                </Card>
+    console.log(updates);
 
-                <Card className="p-3 mb-4 shadow-lg border-1">
-                    <h5 className="fw-bold mb-3">
-                        Volume of Coconut (per Barangay)
+    useEffect(() => {
+        fetchMarketUpdates();
+    }, [fetchMarketUpdates]);
+    return (
+        <Container fluid className="p-4" style={styles.page}>
+            <Row>
+                {/* Sidebar */}
+                <Col md={2} className="bg-white shadow-lg p-3 rounded">
+                    <h5 className="fw-bold mb-4 text-success">
+                        Market Overview
                     </h5>
-                    <ListGroup>
-                        <ListGroup.Item className="d-flex justify-content-between">
-                            Barangay 1 <span className="fw-bold">2,500 kg</span>
-                        </ListGroup.Item>
-                        <ListGroup.Item className="d-flex justify-content-between">
-                            Barangay 2 <span className="fw-bold">3,200 kg</span>
-                        </ListGroup.Item>
-                        <ListGroup.Item className="d-flex justify-content-between">
-                            Barangay 3 <span className="fw-bold">1,800 kg</span>
+                    <ListGroup variant="flush">
+                        <ListGroup.Item className="text-success fw-bold">
+                            Price Updates
                         </ListGroup.Item>
                     </ListGroup>
-                </Card>
-            </Col>
+                </Col>
 
-            {/* Top in the Market */}
-            <Col md={3}>
-                <Card className="p-3 shadow-lg border-1 text-center">
-                    <FaCrown size={50} className="text-warning mb-3" />
-                    <h5 className="fw-bold">Top in the Market</h5>
-                    <p className="fs-4 fw-bold text-warning">Coconut King</p>
-                    <small className="text-muted">Leading Supplier</small>
-                </Card>
-            </Col>
-        </Row>
-    </Container>
-);
+                {/* Feed Section */}
+                <Col md={6}>
+                    <h5 className="fw-bold mb-3">Price of Coconut (per kg)</h5>
+                    <div
+                        style={{
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                            padding: "10px",
+                        }}
+                    >
+                        <Row className="g-2">
+                            {updates[0]?.price_per_coconut_kg?.map(
+                                (price, idx) => (
+                                    <Col key={idx} xs={12} sm={6} md={3} lg={3}>
+                                        <Card className="p-3 shadow-lg border-1">
+                                            <div className="text-center">
+                                                <Row className="align-items-center">
+                                                    <FaWeight
+                                                        size={50}
+                                                        className="text-success mb-2"
+                                                    />
+                                                    <h6>{price.kg} kg</h6>
+                                                </Row>
+                                                <p className="fs-4 fw-bold text-success">
+                                                    ₱{price.price}.00
+                                                </p>
+                                                <small className="text-muted">
+                                                    Updated: June 2024
+                                                </small>
+                                            </div>
+                                        </Card>
+                                    </Col>
+                                )
+                            )}
+                        </Row>
+                    </div>
+
+                    <Card className="p-3 mb-4 shadow-lg border-1">
+                        <h5 className="fw-bold mb-3">
+                            Latest volume of Coconut (per Barangay) as of{" "}
+                            {new Date(
+                                updates[0]?.created_at
+                            ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </h5>
+                        <ListGroup>
+                            {updates[0]?.volume_of_coconut?.map(
+                                (update, idx) => (
+                                    <ListGroup.Item
+                                        key={idx}
+                                        className="d-flex justify-content-between"
+                                    >
+                                        {update.barangay}{" "}
+                                        <span className="fw-bold">
+                                            {update.volume} kg
+                                        </span>
+                                    </ListGroup.Item>
+                                )
+                            )}
+                        </ListGroup>
+                    </Card>
+                </Col>
+
+                {/* Top in the Market */}
+                <Col md={3}>
+                    <Card className="p-3 shadow-lg border-1 text-center">
+                        <FaCrown size={50} className="text-warning mb-3" />
+                        <h5 className="fw-bold">Top in the Market</h5>
+                        <p className="fs-4 fw-bold text-warning">
+                            {updates[0]?.top_market?.name}
+                        </p>
+                        <p className="fs-5 fw-thin text-muted">
+                            {updates[0]?.top_market?.description}
+                        </p>
+                        <small className="text-muted">Leading Supplier</small>
+                    </Card>
+                </Col>
+            </Row>
+        </Container>
+    );
+};
 
 const styles = {
-    fullWidth: {
+    page: {
         width: "100vw",
-        overflowX: "hidden",
-    },
-    fullHeight: {
         height: "100vh",
-        overflowY: "auto",
-    },
-    container: {
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
         justifyContent: "center",
-        padding: "2rem",
-        paddingTop: "6rem",
+        alignItems: "center",
     },
 };
 

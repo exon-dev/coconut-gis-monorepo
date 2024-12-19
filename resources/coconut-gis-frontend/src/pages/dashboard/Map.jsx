@@ -788,7 +788,7 @@ const MapComponent = () => {
                                 </Col>
                                 <div className="mb-3">
                                     <label className="form-label">
-                                        Full name (Last Name, First Name)
+                                        Full name (First Name, Last Name)
                                     </label>
                                     <input
                                         type="text"
@@ -806,6 +806,7 @@ const MapComponent = () => {
                                     <label className="form-label">Gender</label>
                                     <select
                                         className="form-select"
+                                        value={details.gender ?? ""}
                                         onChange={(e) => {
                                             setDetails({
                                                 ...details,
@@ -907,6 +908,10 @@ const MapComponent = () => {
                                     </div>
                                 ) : (
                                     <div className="mt-2">
+                                        <p className="text-center">
+                                            Land areas affected by Pest
+                                            Infestation
+                                        </p>
                                         <Row className="gap-2">
                                             <Col className="d-flex align-items-center">
                                                 <div
