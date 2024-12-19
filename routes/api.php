@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\FarmerController;
 use App\Http\Controllers\Api\LandController;
 use App\Http\Controllers\Api\MarketController;
+use App\Http\Controllers\Api\ProgramController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -64,6 +65,19 @@ Route::group(['prefix' => 'market'], function () {
     Route::get('/{id}', [
         MarketController::class,
         'get_specific_market_update',
-    ]);
-    Route::post('/add', [MarketController::class, 'add_market_update']);
+    ])->middleware('auth:sanctum');
+    Route::post('/add', [
+        MarketController::class,
+        'add_market_update',
+    ])->middleware('auth:sanctum');
+});
+
+Route::group(['prefix' => 'program'], function () {
+    Route::get('/all', [ProgramController::class, 'index'])->middleware(
+        'auth:sanctum'
+    );
+    Route::post('/create', [
+        ProgramController::class,
+        'create_program',
+    ])->middleware('auth:sanctum');
 });

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { Link } from "react-router-dom";
 import { FaBullhorn, FaChartLine } from "react-icons/fa";
 import { motion } from "framer-motion";
 import "ol/ol.css";
@@ -17,11 +18,18 @@ import Stroke from "ol/style/Stroke";
 import CircleStyle from "ol/style/Circle";
 import { useBarangays } from "../../store/barangays";
 import { useAdminStore } from "../../store/admin";
+import { useMarketUpdates } from "../../store/market";
+import { useProgramsStore } from "../../store/programs";
+import CreateProgramModal from "../../components/CreateProgramModal";
 
 const LGUActivities = () => {
+    const { updates } = useMarketUpdates();
     const { barangays } = useBarangays();
+    const { fetchPrograms } = useProgramsStore();
     const mapTargetElement = useRef(null);
     const { admin } = useAdminStore();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { programs } = useProgramsStore();
 
     const prosperidadCoords = fromLonLat([125.91532, 8.599884]);
 
@@ -129,13 +137,35 @@ const LGUActivities = () => {
         });
     }, [barangays, vectorSource]);
 
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    useEffect(() => {
+        fetchPrograms();
+    }, [fetchPrograms]);
+
     return (
         <div style={styles.container}>
+            <CreateProgramModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
             <div style={styles.leftContainer}>
                 {admin.role === "admin" && (
-                    <button style={styles.createEventButton}>
-                        Create Event
-                    </button>
+                    <div className="d-flex justify-content-center align-items-center flex-row gap-4">
+                        <button
+                            onClick={() => {
+                                setIsModalOpen(true);
+                            }}
+                            style={styles.createEventButton}
+                        >
+                            Create Program
+                        </button>
+                        <Link to="/dashboard/programs/your-programs">
+                            Check your listed programs
+                        </Link>
+                    </div>
                 )}
                 <motion.div
                     style={{ ...styles.card, ...styles.feedCard }}
@@ -148,10 +178,14 @@ const LGUActivities = () => {
                     </div>
                     <div style={styles.feedContent}>
                         {/* Render announcements from the database here */}
-                        <p>Program 1: Lorem ipsum dolor sit amet.</p>
-                        <p>Program 2: Consectetur adipiscing elit.</p>
-                        <p>Program 3: Integer nec odio. Praesent libero.</p>
+                        {programs?.slice(0, 2).map((program, idx) => (
+                            <p key={idx}>
+                                Program {program.program_id}:{" "}
+                                {program.program_name}
+                            </p>
+                        ))}
                     </div>
+                    <Link to="/dashboard/programs/all">See all programs</Link>
                 </motion.div>
                 <motion.div
                     style={{ ...styles.card, ...styles.feedCard }}
@@ -164,14 +198,24 @@ const LGUActivities = () => {
                     </div>
                     <div style={styles.feedContent}>
                         {/* Render market updates from the database here */}
-                        <p>Market Update 1: Sed cursus ante dapibus diam.</p>
-                        <p>
-                            Market Update 2: Sed nisi. Nulla quis sem at nibh.
-                        </p>
-                        <p>
-                            Market Update 3: Elementum imperdiet. Duis sagittis.
-                        </p>
+                        {updates?.map((update, idx) => {
+                            return (
+                                <p key={idx}>
+                                    Market Update as of{" "}
+                                    {new Date(
+                                        update.created_at
+                                    ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "2-digit",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                </p>
+                            );
+                        })}
                     </div>
+                    <Link to="/dashboard/market">See more market updates</Link>
                 </motion.div>
             </div>
             <div style={styles.mapContainer} ref={mapTargetElement}></div>
