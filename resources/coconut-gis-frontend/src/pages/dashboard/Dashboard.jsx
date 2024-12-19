@@ -13,9 +13,13 @@ import { Modal, Button } from "react-bootstrap";
 import build from "../../utils/dev";
 import { toast, Toaster } from "sonner";
 import { useAdminStore } from "../../store/admin";
+import { useMarketUpdates } from "../../store/market";
+import { useProgramsStore } from "../../store/programs";
 
 const Dashboard = () => {
     const { admin } = useAdminStore();
+    const { fetchMarketUpdates } = useMarketUpdates();
+    const { fetchPrograms } = useProgramsStore();
     const { fetchBarangays, barangays } = useBarangays();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortOption, setSortOption] = useState("barangay_id");
@@ -46,6 +50,14 @@ const Dashboard = () => {
     useEffect(() => {
         fetchBarangays();
     }, [fetchBarangays]);
+
+    useEffect(() => {
+        fetchMarketUpdates();
+    }, [fetchMarketUpdates]);
+
+    useEffect(() => {
+        fetchPrograms();
+    }, [fetchPrograms]);
 
     const handleViewClick = async (barangay) => {
         setSelectedBarangay(barangay);

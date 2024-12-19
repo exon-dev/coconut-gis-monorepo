@@ -13,6 +13,8 @@ import {
     Market,
     LGUActivities,
     Events,
+    AdminCreatedPrograms,
+    AllPrograms,
 } from "./pages/dashboard";
 
 const App = () => {
@@ -25,7 +27,12 @@ const App = () => {
                 <Route path="/dashboard" element={<RootLayout />}>
                     <Route path="" element={<Dashboard />} />
                     <Route path="map" element={<Map />} />
+                    <Route
+                        path="programs/your-programs"
+                        element={<AdminCreatedPrograms />}
+                    />
                     <Route path="profiles" element={<Profiles />} />
+                    <Route path="programs/all" element={<AllPrograms />} />
                     <Route path="market" element={<Market />} />
                     <Route path="programs" element={<LGUActivities />} />
                     <Route path="events" element={<Events />} />

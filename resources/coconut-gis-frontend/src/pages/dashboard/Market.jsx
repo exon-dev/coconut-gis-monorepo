@@ -3,14 +3,7 @@ import { useAdminStore } from "../../store/admin";
 import { motion } from "framer-motion";
 import { useBarangays } from "../../store/barangays";
 import { GiCoconuts } from "react-icons/gi";
-import {
-    FaUsers,
-    FaThumbsUp,
-    FaWeight,
-    FaCrown,
-    FaClock,
-    FaPlus,
-} from "react-icons/fa";
+import { FaUsers, FaWeight, FaCrown, FaPlus } from "react-icons/fa";
 import {
     Container,
     Row,
@@ -133,6 +126,23 @@ const AdminDashboard = () => {
         }
     };
 
+    console.log(updates);
+
+    const grandTotal = updates?.reduce((grandAcc, update) => {
+        return (
+            grandAcc +
+            update.volume_of_coconut.reduce(
+                (acc, volume) => acc + Number(volume.volume),
+                0
+            )
+        );
+    }, 0);
+
+    const totalCoconutTreesPlanted = barangays.reduce(
+        (acc, barangay) => acc + barangay.coconut_trees_planted,
+        0
+    );
+
     useEffect(() => {
         fetchMarketUpdates();
     }, [fetchMarketUpdates]);
@@ -169,10 +179,12 @@ const AdminDashboard = () => {
                                         className="text-success"
                                     />
                                     <h5 className="mt-3 fw-bold">
-                                        Total Users
+                                        Total Farmers
                                     </h5>
                                     <p className="text-success fw-bold fs-4">
-                                        1600
+                                        {barangays.reduce((acc, barangay) => {
+                                            return acc + barangay.farmers_count;
+                                        }, 0)}
                                     </p>
                                 </Card>
                             </motion.div>
@@ -185,10 +197,10 @@ const AdminDashboard = () => {
                                         className="text-success"
                                     />
                                     <h5 className="mt-3 fw-bold">
-                                        Total Volume of Coconut
+                                        Total Volume
                                     </h5>
                                     <p className="text-success fw-bold fs-4">
-                                        2300
+                                        {grandTotal}
                                     </p>
                                 </Card>
                             </motion.div>
@@ -196,30 +208,38 @@ const AdminDashboard = () => {
                         <Col md={3}>
                             <motion.div whileHover={{ scale: 1.05 }}>
                                 <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
-                                    <FaThumbsUp
-                                        size={30}
-                                        className="text-success"
-                                    />
-                                    <h5 className="mt-3 fw-bold">Likes</h5>
-                                    <p className="text-success fw-bold fs-4">
-                                        940
-                                    </p>
-                                </Card>
-                            </motion.div>
-                        </Col>
-                        <Col md={3}>
-                            <motion.div whileHover={{ scale: 1.05 }}>
-                                <Card className="shadow-lg p-4 d-flex flex-column align-items-center border-0 bg-white rounded-3 h-100">
-                                    <FaClock
+                                    <GiCoconuts
                                         size={30}
                                         className="text-success"
                                     />
                                     <h5 className="mt-3 fw-bold">
-                                        Click Events
+                                        Total Planted
                                     </h5>
                                     <p className="text-success fw-bold fs-4">
-                                        357
+                                        {totalCoconutTreesPlanted}
                                     </p>
+                                </Card>
+                            </motion.div>
+                        </Col>
+                        <Col md={3}>
+                            <motion.div whileHover={{ scale: 1.05 }}>
+                                <Card className="p-3 shadow-lg border-1 text-center">
+                                    <FaCrown
+                                        size={50}
+                                        className="text-warning mb-3"
+                                    />
+                                    <h5 className="fw-bold">
+                                        Top in the Market
+                                    </h5>
+                                    <p className="fs-4 fw-bold text-warning">
+                                        {updates[0]?.top_market?.name}
+                                    </p>
+                                    <p className="fs-5 fw-thin text-muted">
+                                        {updates[0]?.top_market?.description}
+                                    </p>
+                                    <small className="text-muted">
+                                        Leading Supplier
+                                    </small>
                                 </Card>
                             </motion.div>
                         </Col>
@@ -228,63 +248,134 @@ const AdminDashboard = () => {
                     {/* Orders Overview */}
                     <Row className="mt-5">
                         <Col md={6}>
-                            <Card className="shadow-lg border-1 bg-white">
+                            <Card
+                                style={{
+                                    maxHeight: "400px",
+                                    overflowY: "auto",
+                                }}
+                                className="shadow-lg border-1 bg-white"
+                            >
                                 <Card.Body>
                                     <h5 className="fw-bold mb-3">
-                                        Orders Overview
+                                        Volume of Coconut Per Barangay
                                     </h5>
-                                    <ul className="list-unstyled">
-                                        <li className="mb-2 d-flex justify-content-between">
-                                            <span className="text-success fw-bold">
-                                                +24% This Month
-                                            </span>
-                                            <span>Design Changes</span>
-                                        </li>
-                                        <li className="mb-2 d-flex justify-content-between">
-                                            <span>Server Payments</span>
-                                            <span>₱4000</span>
-                                        </li>
-                                        <li className="mb-2 d-flex justify-content-between">
-                                            <span>New Orders</span>
-                                            <span>₱9500</span>
-                                        </li>
-                                    </ul>
+                                    <Table responsive>
+                                        <thead>
+                                            <tr>
+                                                <th className="text-success fw-bold fs-5">
+                                                    Barangay
+                                                </th>
+                                                <th>Volume (kg)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="justify-items-center">
+                                            {updates?.map(
+                                                (update, updateIdx) => (
+                                                    <>
+                                                        <p className="text-muted mt-2">
+                                                            as of{" "}
+                                                            {new Date(
+                                                                update.created_at
+                                                            ).toLocaleDateString(
+                                                                "en-US",
+                                                                {
+                                                                    year: "numeric",
+                                                                    month: "long",
+                                                                    day: "2-digit",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                }
+                                                            )}
+                                                        </p>
+                                                        {update?.volume_of_coconut.map(
+                                                            (volume, idx) => (
+                                                                <tr
+                                                                    key={`${updateIdx}-${idx}`}
+                                                                >
+                                                                    <td className="text-muted">
+                                                                        {
+                                                                            volume.barangay
+                                                                        }{" "}
+                                                                    </td>
+                                                                    <td>
+                                                                        {
+                                                                            volume.volume
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )}
+                                                    </>
+                                                )
+                                            )}
+                                        </tbody>
+                                    </Table>
                                 </Card.Body>
                             </Card>
                         </Col>
 
                         {/* Projects */}
                         <Col md={6}>
-                            <Card className="shadow-lg border-1 bg-white">
+                            <Card
+                                style={{
+                                    maxHeight: "400px",
+                                    overflowY: "auto",
+                                }}
+                                className="shadow-lg border-1 bg-white"
+                            >
                                 <Card.Body>
-                                    <h5 className="fw-bold mb-3">Projects</h5>
+                                    <h5 className="fw-bold mb-3">
+                                        Updated Price
+                                    </h5>
                                     <Table responsive>
                                         <thead>
                                             <tr>
-                                                <th>Project</th>
-                                                <th>Budget</th>
-                                                <th>Progress</th>
+                                                <th>Coconut per kilo (kg)</th>
+                                                <th>Price</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td className="text-muted">
-                                                    Fix Errors
-                                                </td>
-                                                <td>₱4000</td>
-                                                <td className="text-success fw-bold">
-                                                    60%
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="text-muted">
-                                                    UI Redesign
-                                                </td>
-                                                <td>₱5000</td>
-                                                <td className="text-success fw-bold">
-                                                    90%
-                                                </td>
-                                            </tr>
+                                            {updates.map(
+                                                (update, updateIdx) => (
+                                                    <>
+                                                        <p className="text-muted">
+                                                            as of{" "}
+                                                            {new Date(
+                                                                update.created_at
+                                                            ).toLocaleDateString(
+                                                                "en-US",
+                                                                {
+                                                                    year: "numeric",
+                                                                    month: "long",
+                                                                    day: "2-digit",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                }
+                                                            )}
+                                                        </p>
+                                                        {update.price_per_coconut_kg.map(
+                                                            (price, idx) => (
+                                                                <tr
+                                                                    key={`${updateIdx}-${idx}`}
+                                                                >
+                                                                    <td className="text-muted">
+                                                                        {
+                                                                            price.kg
+                                                                        }{" "}
+                                                                        kg
+                                                                    </td>
+                                                                    <td>
+                                                                        ₱{" "}
+                                                                        {
+                                                                            price.price
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )}
+                                                    </>
+                                                )
+                                            )}
                                         </tbody>
                                     </Table>
                                 </Card.Body>
