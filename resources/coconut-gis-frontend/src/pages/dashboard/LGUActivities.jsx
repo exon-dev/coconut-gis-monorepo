@@ -178,7 +178,7 @@ const LGUActivities = () => {
                     </div>
                     <div style={styles.feedContent}>
                         {/* Render announcements from the database here */}
-                        {programs?.slice(0, 2).map((program, idx) => (
+                        {programs?.slice(0, 3).map((program, idx) => (
                             <p key={idx}>
                                 Program {program.program_id}:{" "}
                                 {program.program_name}

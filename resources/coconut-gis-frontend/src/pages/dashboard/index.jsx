@@ -6,3 +6,4 @@ export { default as LGUActivities } from "./LGUActivities";
 export { default as Events } from "./Events";
 export { default as AdminCreatedPrograms } from "./AdminCreatedPrograms";
 export { default as AllPrograms } from "./AllPrograms";
+export { default as ViewSpecificProgram } from "./ViewSpecificProgram";

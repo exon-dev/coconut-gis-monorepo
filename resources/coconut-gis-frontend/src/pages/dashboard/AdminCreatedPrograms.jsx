@@ -1,108 +1,153 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaTree, FaWater, FaUserGraduate } from "react-icons/fa";
+import { useProgramsStore } from "../../store/programs";
+import { useAdminStore } from "../../store/admin";
+import { FaTimes, FaTrash } from "react-icons/fa";
+import { toast, Toaster } from "sonner";
+import build from "../../utils/dev";
 
 const AdminCreatedPrograms = () => {
-    // Dummy data for demonstration
-    const programs = [
-        {
-            cover_image: "https://via.placeholder.com/300x200",
-            program_name: "Community Tree Planting",
-            program_description:
-                "A program to encourage tree planting in local communities.",
-            objectives: [
-                "Increase greenery",
-                "Promote awareness of deforestation",
-                "Engage the youth in environmental activities",
-            ],
-            icon: <FaTree size={24} color="#27ae60" />,
-        },
-        {
-            cover_image: "https://via.placeholder.com/300x200",
-            program_name: "Clean Water Initiative",
-            program_description:
-                "Providing clean and safe water to underserved communities.",
-            objectives: [
-                "Install water filters",
-                "Educate on water sanitation",
-                "Reduce waterborne diseases",
-            ],
-            icon: <FaWater size={24} color="#3498db" />,
-        },
-        {
-            cover_image: "https://via.placeholder.com/300x200",
-            program_name: "Youth Skills Development",
-            program_description:
-                "Training programs for skill development among the youth.",
-            objectives: [
-                "Provide vocational training",
-                "Support job placements",
-                "Boost self-confidence among youth",
-            ],
-            icon: <FaUserGraduate size={24} color="#e67e22" />,
-        },
-        {
-            cover_image: "https://via.placeholder.com/300x200",
-            program_name: "Health Awareness Campaign",
-            program_description:
-                "Promoting health awareness and preventive measures in communities.",
-            objectives: [
-                "Conduct health check-ups",
-                "Distribute health kits",
-                "Provide health education",
-            ],
-            icon: <FaTree size={24} color="#e74c3c" />,
-        },
-    ];
+    const { admin } = useAdminStore();
+    const { adminPrograms, fetchAdminPrograms } = useProgramsStore();
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [programToDelete, setProgramToDelete] = useState(null);
+
+    useEffect(() => {
+        fetchAdminPrograms(admin?.admin_id || 0);
+    }, [fetchAdminPrograms, admin]);
+
+    const handleDelete = async () => {
+        if (programToDelete) {
+            try {
+                const response = await fetch(
+                    build(`program/delete/${programToDelete.program_id}`),
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    toast.error("Failed to delete program. Please try again");
+                    throw new Error("Failed to delete program");
+                }
+
+                toast.success("Program deleted successfully");
+                fetchAdminPrograms(admin?.admin_id || 0);
+                setShowDeleteModal(false);
+            } catch (err) {
+                toast.error("Failed to delete program");
+                throw new Error(err);
+            }
+        }
+    };
 
     return (
         <div style={styles.container}>
             <h2 style={styles.header}>Created Programs</h2>
             <div style={styles.grid}>
-                {programs.map((program, idx) => (
-                    <motion.div
-                        key={idx}
-                        style={styles.card}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <img
-                            src={program.cover_image}
-                            alt={program.program_name}
-                            style={styles.image}
-                        />
-                        <div style={styles.cardContent}>
-                            <div style={styles.iconContainer}>
-                                {program.icon}
+                {adminPrograms?.length > 0 ? (
+                    adminPrograms.map((program, idx) => (
+                        <motion.div
+                            key={idx}
+                            style={styles.card}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <img
+                                src={program.cover_image}
+                                alt={program.program_name}
+                                style={styles.image}
+                            />
+                            <div style={styles.cardContent}>
+                                <div style={styles.iconContainer}>
+                                    {program.icon}
+                                </div>
+                                <h3 style={styles.programName}>
+                                    {program.program_name}
+                                </h3>
+                                <p style={styles.description}>
+                                    {program.program_description?.slice(0, 100)}
+                                    ...
+                                </p>
+                                {program.objectives?.length > 0 && (
+                                    <ul style={styles.objectivesList}>
+                                        {program.objectives.map(
+                                            (objective, objIdx) => (
+                                                <li
+                                                    key={objIdx}
+                                                    style={styles.objectiveItem}
+                                                >
+                                                    {objective}
+                                                </li>
+                                            )
+                                        )}
+                                    </ul>
+                                )}
+                                <div style={styles.buttons}>
+                                    <Link
+                                        to={`/dashboard/programs/${program.program_id}`}
+                                        style={styles.viewButton}
+                                    >
+                                        View Program
+                                    </Link>
+
+                                    <button
+                                        onClick={() => {
+                                            setProgramToDelete(program);
+                                            setShowDeleteModal(true);
+                                        }}
+                                        style={styles.deleteButton}
+                                    >
+                                        <FaTrash size={25} />
+                                    </button>
+                                </div>
                             </div>
-                            <h3 style={styles.programName}>
-                                {program.program_name}
-                            </h3>
-                            <p style={styles.description}>
-                                {program.program_description}
-                            </p>
-                            {program.objectives?.length > 0 && (
-                                <ul style={styles.objectivesList}>
-                                    {program.objectives.map(
-                                        (objective, objIdx) => (
-                                            <li
-                                                key={objIdx}
-                                                style={styles.objectiveItem}
-                                            >
-                                                {objective}
-                                            </li>
-                                        )
-                                    )}
-                                </ul>
-                            )}
-                            <Link to={`/dashboard/programs/${program.id}`}>
-                                View Program
-                            </Link>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    ))
+                ) : (
+                    <h1>No programs created</h1>
+                )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div style={styles.overlay}>
+                    <Toaster position="top-center" richColors />
+                    <div style={styles.modalContainer}>
+                        <button
+                            style={styles.closeButton}
+                            onClick={() => setShowDeleteModal(false)}
+                        >
+                            <FaTimes size={15} />
+                        </button>
+                        <h2>Are you sure you want to delete this program?</h2>
+                        <div style={styles.modalButtons}>
+                            <button
+                                onClick={handleDelete}
+                                style={styles.confirmButton}
+                            >
+                                Yes, Delete
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                style={styles.cancelButton}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Program Modal */}
         </div>
     );
 };
@@ -171,6 +216,92 @@ const styles = {
     objectiveItem: {
         marginBottom: "0.5rem",
         fontSize: "0.9rem",
+    },
+    buttons: {
+        display: "flex",
+        gap: "1rem",
+    },
+    viewButton: {
+        backgroundColor: "#3498db",
+        color: "#fff",
+        padding: "0.5rem 1rem",
+        borderRadius: "8px",
+        textDecoration: "none",
+    },
+    updateButton: {
+        backgroundColor: "#f39c12",
+        color: "#fff",
+        padding: "0.5rem 1rem",
+        borderRadius: "8px",
+        cursor: "pointer",
+    },
+    deleteButton: {
+        backgroundColor: "#e74c3c",
+        color: "#fff",
+        padding: "0.5rem 1rem",
+        borderRadius: "8px",
+        cursor: "pointer",
+    },
+    overlay: {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+    },
+    modalContainer: {
+        backgroundColor: "#fff",
+        borderRadius: "12px",
+        width: "90%",
+        maxWidth: "600px",
+        padding: "2rem",
+        position: "relative",
+        maxHeight: "80vh",
+        overflowY: "auto",
+    },
+    closeButton: {
+        position: "absolute",
+        top: "1rem",
+        right: "1rem",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        borderRadius: "50%",
+    },
+    submitButton: {
+        padding: "0.75rem 1.5rem",
+        border: "none",
+        borderRadius: "8px",
+        backgroundColor: "#27ae60",
+        color: "#fff",
+        fontSize: "1rem",
+        cursor: "pointer",
+    },
+    confirmButton: {
+        padding: "0.5rem 1rem",
+        backgroundColor: "#e74c3c",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+    },
+    cancelButton: {
+        padding: "0.5rem 1rem",
+        backgroundColor: "#3498db",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+    },
+    modalButtons: {
+        display: "flex",
+        gap: "1rem",
+        justifyContent: "center",
     },
 };
 

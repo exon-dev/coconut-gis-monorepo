@@ -21,7 +21,6 @@ const Profiles = () => {
     }, [currentPage, sortOption]);
 
     useEffect(() => {
-        // Filter profiles based on search term
         if (searchTerm) {
             const filtered = profiles.filter((profile) =>
                 profile.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -69,7 +68,7 @@ const Profiles = () => {
         setSortOption(sortOption === "name" ? "farmers" : "name");
     };
 
-    const handleViewClick = (profile) => {
+    const handleDeleteClick = (profile) => {
         setSelectedProfile(profile);
         setShowModal(true);
     };
@@ -77,6 +76,35 @@ const Profiles = () => {
     const handleCloseModal = () => {
         setShowModal(false);
         setSelectedProfile(null);
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            const response = await fetch(
+                build(`farmer/delete/${selectedProfile.farmer_id}`),
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                toast.success("Profile deleted successfully.");
+                fetchProfiles();
+            } else {
+                toast.error("Failed to delete profile.");
+            }
+        } catch (error) {
+            console.error("Error deleting profile:", error);
+            toast.error("An error occurred while deleting the profile.");
+        } finally {
+            handleCloseModal();
+        }
     };
 
     const handlePageChange = (pageNumber) => {
@@ -121,6 +149,7 @@ const Profiles = () => {
                                 <th>Name</th>
                                 <th>Gender</th>
                                 <th>Number of Coconut Trees</th>
+                                <th>Number of Lands</th>
                                 <th>Barangay</th>
                                 <th>Action</th>
                             </tr>
@@ -132,15 +161,16 @@ const Profiles = () => {
                                     <td>{profile.name}</td>
                                     <td>{profile.gender}</td>
                                     <td>{profile.number_of_coconut_trees}</td>
+                                    <td>{profile.lands?.length}</td>
                                     <td>{profile.barangay.barangay_name}</td>
                                     <td>
                                         <button
                                             style={styles.actionButton}
                                             onClick={() =>
-                                                handleViewClick(profile)
+                                                handleDeleteClick(profile)
                                             }
                                         >
-                                            View
+                                            Delete
                                         </button>
                                     </td>
                                 </tr>
@@ -152,7 +182,7 @@ const Profiles = () => {
                             ...Array(
                                 Math.ceil(totalProfiles / profilesPerPage)
                             ).keys(),
-                        ]?.map((page) => (
+                        ].map((page) => (
                             <Pagination.Item
                                 key={page + 1}
                                 active={page + 1 === currentPage}
@@ -167,22 +197,14 @@ const Profiles = () => {
 
             <Modal show={showModal} onHide={handleCloseModal} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Profile Details</Modal.Title>
+                    <Modal.Title>Delete Profile</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedProfile ? (
-                        <div>
-                            <p>
-                                <strong>ID:</strong> {selectedProfile.id}
-                            </p>
-                            <p>
-                                <strong>Name:</strong> {selectedProfile.name}
-                            </p>
-                            <p>
-                                <strong>Number of Farmers:</strong>{" "}
-                                {selectedProfile.farmers_count}
-                            </p>
-                        </div>
+                        <p>
+                            Are you sure you want to delete the profile of{" "}
+                            <strong>{selectedProfile.name}</strong>?
+                        </p>
                     ) : (
                         <p>No profile selected.</p>
                     )}
@@ -190,6 +212,9 @@ const Profiles = () => {
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>
                         Close
+                    </Button>
+                    <Button variant="danger" onClick={handleDeleteConfirm}>
+                        Confirm Delete
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -267,7 +292,7 @@ const styles = {
         padding: "0.5rem 1rem",
         borderRadius: "4px",
         border: "none",
-        backgroundColor: "#27ae60",
+        backgroundColor: "#e74c3c",
         color: "#fff",
         cursor: "pointer",
         display: "flex",

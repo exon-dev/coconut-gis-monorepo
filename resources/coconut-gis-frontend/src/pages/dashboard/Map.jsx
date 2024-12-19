@@ -622,6 +622,7 @@ const MapComponent = () => {
     useEffect(() => {
         fetchFarmers();
     }, []);
+
     return (
         <div
             id="map"

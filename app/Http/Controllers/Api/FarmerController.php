@@ -109,4 +109,34 @@ class FarmerController extends Controller
             );
         }
     }
+
+    public function delete_farmer(int $farmer_id)
+    {
+        try {
+            $farmer = Farmer::find($farmer_id);
+
+            if (!$farmer) {
+                return response()->json(['message' => 'Farmer not found'], 404);
+            }
+
+            //get all lands of the farmer
+            $lands = Land::where('farmer_id', $farmer_id)->get();
+
+            foreach ($lands as $land) {
+                $land->delete();
+            }
+
+            $farmer->delete();
+
+            return response()->json(
+                ['message' => 'Farmer deleted successfully'],
+                200
+            );
+        } catch (\Exception $e) {
+            return response()->json(
+                ['message' => 'Error: ' . $e->getMessage()],
+                500
+            );
+        }
+    }
 }

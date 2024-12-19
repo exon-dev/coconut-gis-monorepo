@@ -20,4 +20,9 @@ class Farmer extends Model
     {
         return $this->belongsTo(Barangay::class, 'barangay_id', 'barangay_id');
     }
+
+    public function lands()
+    {
+        return $this->hasMany(Land::class, 'farmer_id', 'farmer_id');
+    }
 }

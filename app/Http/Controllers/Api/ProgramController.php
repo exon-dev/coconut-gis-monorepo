@@ -18,11 +18,11 @@ class ProgramController extends Controller
         return response()->json($programs);
     }
 
-    public function get_programs_created_by_admin(Request $request)
+    public function get_programs_created_by_admin(int $admin_id)
     {
         try {
             $program = Programs::select('*')
-                ->where('admin_id', $request->admin_id)
+                ->where('admin_id', $admin_id)
                 ->get();
 
             if (!$program) {
@@ -56,6 +56,26 @@ class ProgramController extends Controller
             $program->save();
 
             return response()->json($program);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function delete_program(int $program_id)
+    {
+        try {
+            $program = Programs::find($program_id);
+            if (!$program) {
+                return response()->json(
+                    ['message' => 'Program not found'],
+                    404
+                );
+            }
+
+            $program->delete();
+            return response()->json([
+                'message' => 'Program deleted successfully',
+            ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

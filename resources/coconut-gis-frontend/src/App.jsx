@@ -15,6 +15,7 @@ import {
     Events,
     AdminCreatedPrograms,
     AllPrograms,
+    ViewSpecificProgram,
 } from "./pages/dashboard";
 
 const App = () => {
@@ -33,6 +34,11 @@ const App = () => {
                     />
                     <Route path="profiles" element={<Profiles />} />
                     <Route path="programs/all" element={<AllPrograms />} />
+                    <Route
+                        path="programs/:program_id"
+                        element={<ViewSpecificProgram />}
+                    />
+
                     <Route path="market" element={<Market />} />
                     <Route path="programs" element={<LGUActivities />} />
                     <Route path="events" element={<Events />} />

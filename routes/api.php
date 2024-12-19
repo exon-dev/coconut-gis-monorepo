@@ -52,6 +52,11 @@ Route::group(['prefix' => 'farmer'], function () {
         FarmerController::class,
         'get_farmers_with_details',
     ])->middleware('auth:sanctum');
+
+    Route::delete('/delete/{farmer_id}', [
+        FarmerController::class,
+        'delete_farmer',
+    ])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'land'], function () {
@@ -79,5 +84,13 @@ Route::group(['prefix' => 'program'], function () {
     Route::post('/create', [
         ProgramController::class,
         'create_program',
+    ])->middleware('auth:sanctum');
+    Route::get('/specific_program/{admin_id}', [
+        ProgramController::class,
+        'get_programs_created_by_admin',
+    ])->middleware('auth:sanctum');
+    Route::delete('/delete/{program_id}', [
+        ProgramController::class,
+        'delete_program',
     ])->middleware('auth:sanctum');
 });

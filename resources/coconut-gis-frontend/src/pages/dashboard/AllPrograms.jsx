@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaUser, FaCalendarAlt, FaLink, FaCheckCircle } from "react-icons/fa";
 import { useProgramsStore } from "../../store/programs";
@@ -131,6 +132,12 @@ const AllPrograms = () => {
                                                 )}
                                             </tbody>
                                         </table>
+                                        <h1 style={styles.featuredTitle}>
+                                            Eligibility Criteria
+                                        </h1>
+                                        <p style={styles.featuredDescription}>
+                                            {programs[0].program_eligibility}
+                                        </p>
                                     </div>
                                 </motion.div>
                             </Col>
@@ -181,8 +188,8 @@ const AllPrograms = () => {
                                                     )}
                                                     ...
                                                 </p>
-                                                <a
-                                                    href={`/programs/${program.id}`}
+                                                <Link
+                                                    to={`/dashboard/programs/${program.program_id}`}
                                                     style={styles.cardLink}
                                                 >
                                                     <FaLink
@@ -190,7 +197,7 @@ const AllPrograms = () => {
                                                         style={styles.icon}
                                                     />
                                                     View Program
-                                                </a>
+                                                </Link>
                                             </div>
                                         </motion.div>
                                     ))}
@@ -241,7 +248,7 @@ const styles = {
         fontSize: "2rem",
         fontWeight: "bold",
         color: "#2c3e50",
-        marginBottom: "1rem",
+        marginTop: "1rem",
         display: "flex",
         alignItems: "center",
     },
@@ -289,6 +296,7 @@ const styles = {
         boxShadow: "0 6px 12px rgba(0, 0, 0, 0.1)",
         padding: "1.5rem",
         marginTop: "2rem",
+        maxHeight: "140vh",
     },
     sidebarHeader: {
         fontSize: "1.5rem",

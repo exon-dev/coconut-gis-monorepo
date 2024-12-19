@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { Container, Navbar, Nav, NavDropdown } from "react-bootstrap";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { MdEventNote } from "react-icons/md";
 import {
-    FaLeaf,
     FaTachometerAlt,
     FaMap,
     FaUser,
-    FaUsers,
     FaShoppingCart,
     FaCalendarAlt,
     FaUserCircle,
@@ -15,8 +14,11 @@ import { useAdminStore, useSetAdmin } from "../../store/admin";
 import { useBarangays } from "../../store/barangays";
 import { toast, Toaster } from "sonner";
 import build from "../../utils/dev";
+import logo from "../../assets/logo.png";
+import { useMarketUpdates } from "../../store/market";
 
 const RootLayout = () => {
+    const { fetchMarketUpdates } = useMarketUpdates();
     const { fetchBarangays } = useBarangays();
     useSetAdmin();
     const admin = useAdminStore((state) => state.admin);
@@ -52,8 +54,13 @@ const RootLayout = () => {
             label: "Programs",
             icon: <FaCalendarAlt />,
         },
+        {
+            path: "/dashboard/events",
+            label: "Events",
+            icon: <MdEventNote />,
+        },
         { path: "/dashboard/profiles", label: "Profiles", icon: <FaUser /> },
-        { path: "/dashboard/accounts", label: "Accounts", icon: <FaUsers /> },
+
         {
             path: "/dashboard/market",
             label: "Trade & Market",
@@ -72,6 +79,7 @@ const RootLayout = () => {
         if (!token) {
             window.location.href = "/login";
         } else {
+            fetchMarketUpdates();
             fetchBarangays();
         }
     }, []);
@@ -92,41 +100,46 @@ const RootLayout = () => {
                 style={{ width: "100%" }}
             >
                 <Container>
-                    <Navbar.Brand as={Link} to="/dashboard">
-                        <FaLeaf
-                            style={{
-                                fontSize: "2rem",
-                                color: "#27ae60",
-                                marginRight: "0.5rem",
-                            }}
-                        />
+                    <Navbar.Brand
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                        }}
+                        as={Link}
+                        to="/dashboard"
+                    >
+                        <img src={logo} alt="logo" style={{ width: "35px" }} />
                         MAO-CIS
                     </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="me-auto gap-3">
-                            {navItems.map((item) => (
-                                <Nav.Link
-                                    as={Link}
-                                    to={item.path}
-                                    key={item.path}
-                                    className={
-                                        location.pathname === item.path
-                                            ? "active"
-                                            : ""
-                                    }
-                                    style={
-                                        location.pathname === item.path
-                                            ? {
-                                                  color: "#27ae60",
-                                                  fontWeight: "bold",
-                                              }
-                                            : {}
-                                    }
-                                >
-                                    {item.icon} {item.label}
-                                </Nav.Link>
-                            ))}
+                            {navItems.map((item) =>
+                                admin?.role === "user" &&
+                                item.label === "Profiles" ? null : (
+                                    <Nav.Link
+                                        as={Link}
+                                        to={item.path}
+                                        key={item.path}
+                                        className={
+                                            location.pathname === item.path
+                                                ? "active"
+                                                : ""
+                                        }
+                                        style={
+                                            location.pathname === item.path
+                                                ? {
+                                                      color: "#27ae60",
+                                                      fontWeight: "bold",
+                                                  }
+                                                : {}
+                                        }
+                                    >
+                                        {item.icon} {item.label}
+                                    </Nav.Link>
+                                )
+                            )}
                         </Nav>
                         <Nav className="d-flex gap-2">
                             <Navbar.Text>Welcome, {admin?.name}</Navbar.Text>
