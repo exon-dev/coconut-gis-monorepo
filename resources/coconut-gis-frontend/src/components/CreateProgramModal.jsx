@@ -139,7 +139,7 @@ const CreateProgramModal = ({ isOpen, onClose }) => {
             <Toaster position="top-center" richColors />
             <div style={styles.modalContainer}>
                 <button style={styles.closeButton} onClick={onClose}>
-                    <FaTimes size={50} />
+                    <FaTimes size={25} />
                 </button>
                 <h2 style={styles.header}>Create Program</h2>
                 <form style={styles.form}>
@@ -301,6 +301,7 @@ const styles = {
         background: "none",
         border: "none",
         cursor: "pointer",
+        color: "#000000",
     },
     header: {
         marginBottom: "1.5rem",
