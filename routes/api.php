@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FarmerController;
 use App\Http\Controllers\Api\LandController;
 use App\Http\Controllers\Api\MarketController;
 use App\Http\Controllers\Api\ProgramController;
+use App\Http\Controllers\Api\EventController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -92,5 +93,22 @@ Route::group(['prefix' => 'program'], function () {
     Route::delete('/delete/{program_id}', [
         ProgramController::class,
         'delete_program',
+    ])->middleware('auth:sanctum');
+});
+
+Route::group(['prefix' => 'event'], function () {
+    Route::get('/all', [EventController::class, 'index'])->middleware(
+        'auth:sanctum'
+    );
+    Route::post('/create', [
+        EventController::class,
+        'create_event',
+    ])->middleware('auth:sanctum');
+    Route::put('/edit', [EventController::class, 'edit_event'])->middleware(
+        'auth:sanctum'
+    );
+    Route::delete('/delete/{event_id}', [
+        EventController::class,
+        'delete_event',
     ])->middleware('auth:sanctum');
 });

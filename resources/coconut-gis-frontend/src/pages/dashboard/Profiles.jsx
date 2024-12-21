@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { FaUserPlus, FaSync, FaSort } from "react-icons/fa";
+import { FaUserPlus, FaSync } from "react-icons/fa";
 import { Modal, Button, Pagination } from "react-bootstrap";
 import build from "../../utils/dev";
 import { toast, Toaster } from "sonner";
 
 const Profiles = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    // eslint-disable-next-line no-unused-vars
     const [sortOption, setSortOption] = useState("name");
     const [currentPage, setCurrentPage] = useState(1);
     const [profiles, setProfiles] = useState([]);
@@ -64,10 +65,6 @@ const Profiles = () => {
         fetchProfiles();
     };
 
-    const handleSortClick = () => {
-        setSortOption(sortOption === "name" ? "farmers" : "name");
-    };
-
     const handleDeleteClick = (profile) => {
         setSelectedProfile(profile);
         setShowModal(true);
@@ -118,7 +115,11 @@ const Profiles = () => {
                 <div style={styles.header}>
                     <h1>Profiles</h1>
                     <div style={styles.buttonGroup}>
-                        <Button variant="primary" onClick={handleCreateClick}>
+                        <Button
+                            className="btn btn-success"
+                            variant="primary"
+                            onClick={handleCreateClick}
+                        >
                             <FaUserPlus /> Create
                         </Button>
                         <Button
@@ -126,9 +127,6 @@ const Profiles = () => {
                             onClick={handleRefreshClick}
                         >
                             <FaSync /> Refresh
-                        </Button>
-                        <Button variant="info" onClick={handleSortClick}>
-                            <FaSort /> Sort Farmers
                         </Button>
                     </div>
                 </div>

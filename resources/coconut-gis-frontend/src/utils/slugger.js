@@ -1,3 +1,11 @@
 export default function slugger(path) {
-    return path.replace(" ", "-").toLowerCase();
+    return encodeURIComponent(
+        path
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/--+/g, "-")
+            .replace(/^-+|-+$/g, "")
+    );
 }
