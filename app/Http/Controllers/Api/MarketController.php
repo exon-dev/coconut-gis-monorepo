@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\MarketUpdates;
 use Illuminate\Support\Facades\Log;
+use App\Events\MarketUpdateNotification;
 
 class MarketController extends Controller
 {
@@ -41,6 +42,12 @@ class MarketController extends Controller
             $marketUpdate->volume_of_coconut = $request->volume_of_coconut;
             $marketUpdate->top_market = $request->top_market;
             $marketUpdate->save();
+
+            broadcast(
+                new MarketUpdateNotification(
+                    'New market update added. Kindly check it out.'
+                )
+            );
 
             return response()->json(
                 [

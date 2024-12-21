@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Container, Navbar, Nav, NavDropdown } from "react-bootstrap";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { MdEventNote } from "react-icons/md";
@@ -16,12 +16,15 @@ import { toast, Toaster } from "sonner";
 import build from "../../utils/dev";
 import logo from "../../assets/logo.png";
 import { useMarketUpdates } from "../../store/market";
+import Pusher from "pusher-js";
+import { AnimatePresence, motion } from "framer-motion";
 
 const RootLayout = () => {
     const { fetchMarketUpdates } = useMarketUpdates();
     const { fetchBarangays } = useBarangays();
     useSetAdmin();
     const admin = useAdminStore((state) => state.admin);
+    const [notification, setNotification] = useState("");
     const location = useLocation();
 
     const handleLogout = async () => {
@@ -84,6 +87,24 @@ const RootLayout = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const pusher = new Pusher("2d496357dcb0facbc84d", {
+            cluster: "ap1",
+        });
+
+        const channel = pusher.subscribe("market-updates");
+        const timeOut = 20000; // 20 seconds
+
+        channel.bind("App\\Events\\MarketUpdateNotification", function (data) {
+            setNotification(data.message);
+            setTimeout(() => setNotification(""), timeOut);
+        });
+
+        return () => {
+            pusher.unsubscribe("market-updates");
+        };
+    }, []);
+
     return (
         <div
             style={{
@@ -93,11 +114,44 @@ const RootLayout = () => {
             }}
         >
             <Toaster richColors position="top-center" />
+            <AnimatePresence>
+                {notification && (
+                    <motion.div
+                        style={{
+                            position: "fixed",
+                            top: 0,
+                            width: "100%",
+                            backgroundColor: "#375534",
+                            color: "#FFFFFF",
+                            zIndex: 1050,
+                            padding: "0.5rem",
+                            fontWeight: "bold",
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        <motion.div
+                            style={{
+                                display: "inline-block",
+                                whiteSpace: "nowrap",
+                            }}
+                            animate={{ x: ["100%", "-100%"] }}
+                            transition={{
+                                duration: 10,
+                                repeat: Infinity,
+                                ease: "linear",
+                            }}
+                        >
+                            {notification}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <Navbar
                 bg="light"
                 expand="lg"
                 fixed="top"
-                style={{ width: "100%" }}
+                style={{ width: "100%", top: notification ? "2.5rem" : 0 }}
             >
                 <Container>
                     <Navbar.Brand

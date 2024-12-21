@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FaUser, FaCalendarAlt, FaLink, FaCheckCircle } from "react-icons/fa";
 import { useProgramsStore } from "../../store/programs";
 import { Row, Col } from "react-bootstrap";
+import slugger from "../../utils/slugger";
 
 const AllPrograms = () => {
     const { programs, fetchPrograms } = useProgramsStore();
@@ -189,7 +190,13 @@ const AllPrograms = () => {
                                                     ...
                                                 </p>
                                                 <Link
-                                                    to={`/dashboard/programs/${program.program_id}`}
+                                                    to={`/dashboard/programs/${slugger(
+                                                        program.program_name
+                                                    )}`}
+                                                    state={{
+                                                        program_id:
+                                                            program.program_id,
+                                                    }}
                                                     style={styles.cardLink}
                                                 >
                                                     <FaLink
