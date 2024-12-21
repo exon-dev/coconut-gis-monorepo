@@ -215,7 +215,9 @@ const LGUActivities = () => {
                             );
                         })}
                     </div>
-                    <Link to="/dashboard/market">See more market updates</Link>
+                    <Link to="/dashboard/market">
+                        See latest market updates
+                    </Link>
                 </motion.div>
             </div>
             <div style={styles.mapContainer} ref={mapTargetElement}></div>

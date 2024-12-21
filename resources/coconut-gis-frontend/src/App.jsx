@@ -35,7 +35,7 @@ const App = () => {
                     <Route path="profiles" element={<Profiles />} />
                     <Route path="programs/all" element={<AllPrograms />} />
                     <Route
-                        path="programs/:program_id"
+                        path="programs/:program_name"
                         element={<ViewSpecificProgram />}
                     />
 

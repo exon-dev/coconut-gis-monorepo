@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { FaUser, FaCalendarAlt, FaLink, FaCheckCircle } from "react-icons/fa";
 import { useProgramsStore } from "../../store/programs";
 import { motion } from "framer-motion";
 import { Row, Col } from "react-bootstrap";
+import slugger from "../../utils/slugger";
 
 const ViewSpecificProgram = () => {
-    const { program_id } = useParams();
     const { programs, fetchPrograms } = useProgramsStore();
     const [selectedProgram, setSelectedProgram] = useState(null);
+    const location = useLocation();
+    const { program_id } = location.state || {};
 
     useEffect(() => {
         fetchPrograms();
@@ -174,7 +176,13 @@ const ViewSpecificProgram = () => {
                                                 ...
                                             </p>
                                             <Link
-                                                to={`/dashboard/programs/${program.program_id}`}
+                                                to={`/dashboard/programs/${slugger(
+                                                    program.program_name
+                                                )}`}
+                                                state={{
+                                                    program_id:
+                                                        program.program_id,
+                                                }}
                                                 style={styles.cardLink}
                                             >
                                                 <FaLink
