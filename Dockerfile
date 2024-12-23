@@ -6,8 +6,6 @@ COPY . .
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN composer clear-cache && composer install --optimize-autoloader --no-dev --ignore-platform-reqs
-
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
 ENV PHP_ERRORS_STDERR 1
