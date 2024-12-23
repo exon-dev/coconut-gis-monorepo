@@ -4,7 +4,7 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install --optimize-autoloader --no-dev
+RUN composer clear-cache && composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
@@ -16,5 +16,4 @@ ENV APP_DEBUG false
 ENV LOG_CHANNEL stderr
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-# Run the default startup script
 CMD ["/start.sh"]
